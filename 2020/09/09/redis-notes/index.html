@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"williamgrt.github.io","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文记录了《Redis设计与实现》中比较重要的内容。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Redis设计与实现》读书笔记">
+<meta property="og:url" content="https://williamgrt.github.io/2020/09/09/redis-notes/index.html">
+<meta property="og:site_name" content="William&#39;s blog">
+<meta property="og:description" content="本文记录了《Redis设计与实现》中比较重要的内容。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/image-20200909235912232.png">
+<meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
+<meta property="article:modified_time" content="2020-09-09T16:00:44.570Z">
+<meta property="article:author" content="williamgrt">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/image-20200909235912232.png">
+
+<link rel="canonical" href="https://williamgrt.github.io/2020/09/09/redis-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>《Redis设计与实现》读书笔记 | William's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">William's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://williamgrt.github.io/2020/09/09/redis-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="williamgrt">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="William's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          《Redis设计与实现》读书笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-09 23:30:11" itemprop="dateCreated datePublished" datetime="2020-09-09T23:30:11+08:00">2020-09-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-10 00:00:44" itemprop="dateModified" datetime="2020-09-10T00:00:44+08:00">2020-09-10</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文记录了《Redis设计与实现》中比较重要的内容。</p>
+<a id="more"></a>
+
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><h3 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h3><ul>
+<li>字典在Redis中应用广泛。例如，字典键的实现、数据库的底层实现。</li>
+<li>Redis采用MurmurHash2算法计算哈希键值，采用链地址法解决哈希冲突。</li>
+<li>当Redis的负载因子达到一定的大小，会采用rehash操作。执行rehash的时机如下：<ul>
+<li>当前数据库没有执行BGSAVE或SAVE指令，并且负载因子大于1。</li>
+<li>当前数据库正在执行BGSAVE或SAVE指令，并且负载因子大于5。这样做的目的是减少写时拷贝过程中内存的修改大小，提升性能。</li>
+</ul>
+</li>
+<li>由于一次性对大量的键值对（千万级或者亿级）执行rehash操作会阻塞当前服务器线程，无法继续执行命令，Redis采用了渐进式rehash方法完成rehash操作。具体步骤如下：<ul>
+<li>为 <code>ht[1]</code>分配空间，让字典同时拥有<code>ht[0]</code>和<code>ht[1]</code>。</li>
+<li>初始化索引计数器rehashidx为0，表示rehash正式开始。</li>
+<li>每当执行查找、插入、删除操作时，顺带对<code>ht[0][rehashidx]</code>的所有元素执行rehash操作到<code>ht[1]</code>中，完成后，rehashidx++。</li>
+<li>当所有的键值对迁移完毕后，回收<code>ht[0]</code>的内存空间，把<code>ht[1]</code>变为<code>ht[0]</code>，同时新建一个<code>ht[1]</code>用于下一次的rehash过程。</li>
+</ul>
+</li>
+</ul>
+<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3><h3 id="压缩链表"><a href="#压缩链表" class="headerlink" title="压缩链表"></a>压缩链表</h3><h3 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h3><ul>
+<li><p>Redis一共有五种对象，分别为：字符串对象、列表对象、哈希对象、集合对象、有序集合对象。每种对象在不同的使用场景下有不同的底层编码方式，可以优化使用效率。</p>
+<img src="/2020/09/09/redis-notes/image-20200909235912232.png" class="">
+</li>
+<li><p>Redis通过引用计数的方式实现内存的自动回收。同时，通过引用计数也可以实现对象的复用。</p>
+</li>
+</ul>
+<h2 id="单机数据库"><a href="#单机数据库" class="headerlink" title="单机数据库"></a>单机数据库</h2><h3 id="键过期删除策略"><a href="#键过期删除策略" class="headerlink" title="键过期删除策略"></a>键过期删除策略</h3><ul>
+<li>Redis把所有键的过期时间添加到一个过期字典中，检查过期字典就可以判断一个键是否过期。</li>
+<li>过期删除策略分为三种：定时删除、惰性删除、定期删除。<ul>
+<li>定时删除创建一个定时器，当定时器过期时，立刻删除数据键。这种策略对内存最为友好，但是会对CPU造成更多的负担。</li>
+<li>惰性删除每次访问键时检查键是否过期，如果过期就删除这个键。这种策略对CPU最为友好，但是会造成内存的浪费。</li>
+<li>定期删除结合了二者的优点。</li>
+</ul>
+</li>
+<li>Redis采用惰性删除和定期删除两种过期删除策略。</li>
+</ul>
+<h3 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h3><ul>
+<li>RDB持久化通过保存当前Redis数据库状态实现持久化。</li>
+</ul>
+<h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><ul>
+<li>AOF持久化通过保存Redis服务器的写命令实现保存数据库的状态。</li>
+<li>为防止AOF文件过大，服务器定期执行AOF重写操作。重写操作获取当前数据库的状态，使用更少的写命令得到当前数据库的状态。</li>
+<li>在重写的过程中，服务器可能会接收到新的写命令，造成AOF文件状态与当前数据库状态的不一致。为了解决这个问题，Redis设置了一个AOF缓冲区。在AOF重写过程中，服务器将接收到的写命令保存到缓冲区中。当子进程的AOF重写操作完成后，把缓冲区的内容写入到新的AOF文件中。</li>
+</ul>
+<h3 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h3><ul>
+<li>Redis是一个事件驱动程序，事件类型分为文件事件和时间事件。</li>
+<li>文件事件处理器基于Reactor模式开发，通过包装I/O多路复用函数实现。有两种类型的事件：<ul>
+<li>可读事件：客户端执行write操作、客户端执行close操作、客户端执行connect操作；</li>
+<li>可写事件：客户端执行read操作。</li>
+</ul>
+</li>
+<li>时间事件有以下两种类型：<ul>
+<li>定时事件：让一段程序在指定的时间后执行一次；</li>
+<li>周期性事件：让一段程序每隔一段时间执行一次。</li>
+</ul>
+</li>
+<li>所有时间事件存储在一个无序链表中，执行时遍历整个链表，处理所有已到达的时间事件。<ul>
+<li>原因：Redis服务器只有一个周期性事件，使用链表不会影响性能。</li>
+</ul>
+</li>
+</ul>
+<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3><ul>
+<li>服务器接收到客户端发送的命令后，执行以下几个步骤：<ul>
+<li>读取命令请求，缓存在客户端结构体中；</li>
+<li>执行命令，包含了以下四步：（1）查找命令实现；（2）执行预备工作；（3）调用命令的执行函数；（4）执行后续工作。</li>
+<li>将命令回复发送给客户端。</li>
+</ul>
+</li>
+<li>服务器每100毫秒执行一次<code>serverCron</code>函数。该函数主要的工作包括：</li>
+</ul>
+<h2 id="多机数据库"><a href="#多机数据库" class="headerlink" title="多机数据库"></a>多机数据库</h2><h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><ul>
+<li>复制分为两个步骤：同步和命令传播。</li>
+<li>命令传播：主服务器会将写命令发送给从服务器。</li>
+<li>同步：同步分为完全重同步和部分重同步：<ul>
+<li>完全重同步：适用于首次进行主从同步的情况。主服务器执行BGSAVE生成RDB文件，同时记录所有的写命令。把这些内容发送给从服务器，即可完成同步。</li>
+<li>部分重同步：用于断线重连后主从复制，如果条件允许，主服务器将在连接断开后接收到的写命令发送给从服务器，从而解决了断线重连后完全重同步的低效问题。</li>
+</ul>
+</li>
+<li>部分重同步的实现依赖于三个机制：复制偏移量、复制积压缓冲区、服务器的运行id。<ul>
+<li>复制偏移量用于确定主从服务器之间是否处于一致状态。如果主从服务器的复制偏移量相同，那么他们就处于一致状态；反之，他们就处于不一致状态。</li>
+<li>复制积压缓冲区保存主服务器在命令传输阶段发送的写命令。当从服务器发送PSYNC命令时，如果复制积压缓冲区的内容包含所有缺失的数据，那么执行部分重同步操作；反之，执行完全重同步操作。</li>
+<li>服务器的运行id用于确定从服务器复制的主服务器。当从服务保存的运行id和主服务器的运行id相同，那么主服务器可以尝试执行部分重同步操作；反之，主服务器需要使用完全重同步操作。</li>
+</ul>
+</li>
+<li>从服务器通过心跳机制检测检查网络连接状态以及检测命令丢失情况。</li>
+</ul>
+<h3 id="Sentinel（哨兵机制）"><a href="#Sentinel（哨兵机制）" class="headerlink" title="Sentinel（哨兵机制）"></a>Sentinel（哨兵机制）</h3><ul>
+<li>由一个或者多个Sentinel实例组成的Sentinel系统可以监视任意多个主服务器，以及这些服务器下属的从服务器。如果被监视的主服务器下线，Sentinel系统可以从下属的从服务器中选出一个服务器作为新的主服务器。Sentinel保证了Redis系统的<strong>高可用性</strong>。</li>
+<li>Sentinel和每个服务器（主服务器和从服务器）建立了一条命令连接和一条订阅连接。完成后，Sentinel每10秒发送一次INFO命令获取主服务器的当前信息，用于更新主服务器实例。在这个过程中，如果Sentinel系统发现了新的从服务器，会和这个从服务器之间建立一条命令连接和一条订阅连接，用于更新从服务器实例。</li>
+<li>Sentinel每2秒一次向主服务器和从服务器发送频道信息，并通过订阅连接接收频道消息，用于更新其他监视该服务器的Sentinel信息。当Sentinel发现了新的Sentinel后，会更新<code>sentinels</code>字典，并和该Sentinel建立一条命令连接（没有订阅连接）。</li>
+<li>Sentinel每1秒发送一次PING指令，持续回复无效命令超过一个固定的时间，Sentinel判断主服务器已经下线（主观下线）。随后Sentinel会询问其他的Sentinel该服务器是否下线，如果足够多的Sentinel判断服务器已经处于主观下线状态，该服务器进入客观下线状态。</li>
+<li>当一个主服务器处于客观下线状态后，监视该主服务器的Sentinel需要选举出一个领头Sentinel，执行故障转移操作。选举流程采用Raft算法的一个实现，具体流程如下：<ul>
+<li>所有的Sentinel都有被选举为领头Sentinel的资格。</li>
+<li>每个发现自己监听的主服务器处于客观下线状态的Sentinel都会要求其他的Sentinel设置自己为局部领头Sentinel。</li>
+<li>最先向目标Sentinel发送设置要求的源Sentinel会被设置为目标Sentinel的局部领头Sentinel，其他的设置要求都会被忽略。（即先到先得）</li>
+<li>如果某个Sentinel被半数以上的Sentinel选举为局部领头Sentinel，这个Sentinel将成为领头Sentinel。</li>
+<li>如果在规定时间内没有选出领头Sentinel，那么过一段时间后再次进行选举，直到选出领头Sentinel为止。</li>
+</ul>
+</li>
+<li>领头Sentinel负责故障转移操作，包括确定新的主服务器、修改从服务器的复制目标、将下线的主服务器设置为新主服务器的从服务器。</li>
+<li>选举新主服务器步骤如下：<ul>
+<li>删除已经下线的从服务器（保证从服务器都是在线的）。</li>
+<li>删除最近5秒内没有回复过领头Sentinel的INFO命令的从服务器（保证从服务器的网络状态良好）。</li>
+<li>删除和主服务器断开连接超过down-after-milliseconds*10的从服务器（保证从服务器的数据内容都是尽可能新的）。</li>
+<li>之后，领头Sentinel根据服务器的优先级排序，选出优先级最大的从服务器。如果有多个最高优先级的从服务器，选择复制偏移量最大的从服务器。如果有多个优先级最高、复制偏移量最大的从服务器，选择ID最小的从服务器。</li>
+</ul>
+</li>
+</ul>
+<h3 id="集群"><a href="#集群" class="headerlink" title="集群"></a>集群</h3><ul>
+<li><p>节点通过CLUSTER MEET命令连接。当节点A和节点B完成握手后，节点A通过Gossip协议扩散给所在集群的其他节点，告知节点B已经加入到集群中了。</p>
+<blockquote>
+<p>Gossip协议的执行过程如下：Gossip 过程是由种子节点发起，当一个种子节点有状态需要更新到网络中的其他节点时，它会随机的选择周围几个节点散播消息，收到消息的节点也会重复该过程，直至最终网络中所有的节点都收到了消息。这个过程可能需要一定的时间，由于不能保证某个时刻所有节点都收到消息，但是理论上最终所有节点都会收到消息，因此它是一个最终一致性协议。</p>
+</blockquote>
+</li>
+<li><p>Redis集群采用分片的方式保存键值对，数据库总共分为16384个槽，每个key都属于其中一个槽，每个服务器可以同时处理0-16384个槽中的键。</p>
+</li>
+<li><p>每个槽的指派信息记录在一个bitmap中，同时记录了集群中所有槽指派信息。在集群中，每个节点通过消息传播的方式，告知集群内其他的节点自己负责的槽。</p>
+</li>
+<li><p>当客户端向集群内的任意节点发送和键相关的命令时，节点需要计算出键属于哪个槽，并且判断这个槽是否由自己负责的。如果不是自己负责的，需要给客户端发送一个MOVE错误。客户端接收到这个消息后，将会被重定向到正确的节点，然后再次发送相同的命令。</p>
+</li>
+</ul>
+<ul>
+<li><p>Redis使用CRC-16校验和确定每个数据键属于哪个槽。</p>
+</li>
+<li><p>Redis集群提供了重新分片的功能。重新分片指的是将任意数量的指派给某个节点（源节点）的槽划分给另一个节点（目标节点），Redis使用管理软件<code>redis-trib</code>执行。重新分片操作可以在线进行，集群不需要下线。在操作过程中，如果客户端向源节点发送数据键相关的命令，并且数据键属于正在被迁移的槽，那么源节点首先在自己的数据库查找键，如果不存在，向客户端发送一个ASK错误。客户端接收到这个错误后，将会重定向到目标节点，并且重新执行数据键相关的命令。</p>
+</li>
+</ul>
+<ul>
+<li><p>MOVE错误和ASK错误的区别如下：</p>
+<ul>
+<li>MOVE命令的效果是永久性的。</li>
+<li>ASK命令的效果是临时性的。</li>
+</ul>
+</li>
+<li><p>集群内每个节点通过发送PING消息确定集群内的节点是否在线。如果接收了PING消息的节点没有在规定时间内返回PONG消息，那么发送PING消息的节点会把接收PING消息的节点标记为<strong>疑似下线</strong>状态。如果有半数以上的主节点认为某个主节点处于疑似下线状态，那么该节点会被标记为已下线，并通过消息广播的形式通知集群内所有的节点。</p>
+</li>
+<li><p>当Redis集群中的主节点下线后，需要选出一个从节点成为新的主节点。选举的过程和Sentinel选举领头节点的过程类似，也是Raft算法的实现。选举过程如下：</p>
+<ul>
+<li>当从节点发现自己的主节点已下线，它会要求所有具有投票权的主节点给自己投票。</li>
+<li>主节点会把接收到的第一个从节点设置为新的主节点。</li>
+<li>如果一个从节点获得n/2+1个主节点的投票支持，那么就会成为新的主节点。</li>
+</ul>
+</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>《Redis设计与实现》</li>
+<li><a href="https://zhuanlan.zhihu.com/p/41228196" target="_blank" rel="noopener">P2P 网络核心技术：Gossip 协议</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># 数据库</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/06/sangfor/" rel="prev" title="深信服实习面经">
+      <i class="fa fa-chevron-left"></i> 深信服实习面经
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字典"><span class="nav-number">1.1.</span> <span class="nav-text">字典</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.2.</span> <span class="nav-text">跳跃表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整数集合"><span class="nav-number">1.3.</span> <span class="nav-text">整数集合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩链表"><span class="nav-number">1.4.</span> <span class="nav-text">压缩链表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象"><span class="nav-number">1.5.</span> <span class="nav-text">对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单机数据库"><span class="nav-number">2.</span> <span class="nav-text">单机数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#键过期删除策略"><span class="nav-number">2.1.</span> <span class="nav-text">键过期删除策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB持久化"><span class="nav-number">2.2.</span> <span class="nav-text">RDB持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF持久化"><span class="nav-number">2.3.</span> <span class="nav-text">AOF持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件"><span class="nav-number">2.4.</span> <span class="nav-text">事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端"><span class="nav-number">2.5.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器"><span class="nav-number">2.6.</span> <span class="nav-text">服务器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多机数据库"><span class="nav-number">3.</span> <span class="nav-text">多机数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制"><span class="nav-number">3.1.</span> <span class="nav-text">复制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sentinel（哨兵机制）"><span class="nav-number">3.2.</span> <span class="nav-text">Sentinel（哨兵机制）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群"><span class="nav-number">3.3.</span> <span class="nav-text">集群</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">williamgrt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">williamgrt</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.7.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
