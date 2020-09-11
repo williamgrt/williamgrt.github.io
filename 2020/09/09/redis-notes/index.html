@@ -28,10 +28,14 @@
 <meta property="og:description" content="本文记录了《Redis设计与实现》中比较重要的内容。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/image-20200909235912232.png">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-b0b05fb491bff29077e3cf7afca171fc7777de7a.png">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-ed7f323651c08db48eb84cb21e4a609d0777e121.png">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-e2077e76096c95111bdb16207691c0ef8286fd4c.png">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-23af1c5c65bc0be2a8d6ca776761bf10657561c0.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png">
 <meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-09-11T08:19:46.417Z">
+<meta property="article:modified_time" content="2020-09-11T16:10:12.907Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="数据库">
 <meta name="twitter:card" content="summary">
@@ -199,7 +203,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-11 16:19:46" itemprop="dateModified" datetime="2020-09-11T16:19:46+08:00">2020-09-11</time>
+                <time title="修改时间：2020-09-12 00:10:12" itemprop="dateModified" datetime="2020-09-12T00:10:12+08:00">2020-09-12</time>
               </span>
 
           
@@ -232,12 +236,9 @@
 </ul>
 </li>
 </ul>
-<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><ul>
-<li><h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3></li>
-<li><p>当SET内容不多，并且都是整数时，Redis使用整数集合作为底层实现。</p>
-</li>
-<li><p>整数集合的元素类型包括<code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。整数集合不支持降级操作。</p>
-</li>
+<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3><ul>
+<li>当SET内容不多，并且都是整数时，Redis使用整数集合作为底层实现。</li>
+<li>整数集合的元素类型包括<code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。整数集合不支持降级操作。</li>
 </ul>
 <h3 id="压缩链表"><a href="#压缩链表" class="headerlink" title="压缩链表"></a>压缩链表</h3><ul>
 <li>压缩列表是哈希键和集合键的底层实现之一，当数据量不大，并且列表键的列表项或者哈希键的键值是整型或者短字符串，就会使用压缩链表作为底层实现。</li>
@@ -268,13 +269,29 @@
 <li>Redis采用惰性删除和定期删除两种过期删除策略。</li>
 </ul>
 <h3 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h3><ul>
-<li>RDB持久化通过保存当前Redis数据库状态实现持久化。RDB有两种命令可以实现持久化操作：SAVE和BGSAVE。<ul>
+<li><p>RDB持久化通过保存当前Redis数据库状态实现持久化。RDB有两种命令可以实现持久化操作：SAVE和BGSAVE。</p>
+<ul>
 <li>SAVE操作阻塞当前进程，直到持久化操作完成，服务器不会执行新的命令。</li>
 <li>BGSAVE操作创建一个子进程执行持久化操作，在这个期间，服务器依旧可以执客户端发送的命令。</li>
 </ul>
 </li>
-<li>写入RDB文件的过程中，服务器会检查每个键是否是过期的，知写入没有过期的键。在载入RDB文件的过程中，如果服务器是在主模式下运行，那么会检查键是否过期；否则会把RDB文件全部载入。</li>
-<li></li>
+<li><p>写入RDB文件的过程中，服务器会检查每个键是否是过期的，知写入没有过期的键。在载入RDB文件的过程中，如果服务器是在主模式下运行，那么会检查键是否过期；否则会把RDB文件全部载入。</p>
+</li>
+<li><p>可以对数据库设置RDB文件的自动保存条件。Redis通过dirty计数器保存上一次执行RDB操作后数据库的修改次数，通过lastsave时间戳记录距离上一次RDB操作的事件。每100ms就会检查这两个值，如果达到了自动保存条件就会执行RDB持久化操作。</p>
+</li>
+<li><p>RDB文件结构如下</p>
+<img src="/2020/09/09/redis-notes/graphviz-b0b05fb491bff29077e3cf7afca171fc7777de7a.png" class="">
+
+<p>每个数据库结构如下</p>
+<img src="/2020/09/09/redis-notes/graphviz-ed7f323651c08db48eb84cb21e4a609d0777e121.png" class="">
+
+<p>不带过期时间的键值对结构如下</p>
+<img src="/2020/09/09/redis-notes/graphviz-e2077e76096c95111bdb16207691c0ef8286fd4c.png" class="">
+
+<p>带过期时间的键值对结构如下</p>
+<img src="/2020/09/09/redis-notes/graphviz-23af1c5c65bc0be2a8d6ca776761bf10657561c0.png" class="">
+
+</li>
 </ul>
 <h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><ul>
 <li>AOF持久化通过保存Redis服务器的写命令实现保存数据库的状态。</li>
@@ -298,17 +315,14 @@
 </ul>
 </li>
 </ul>
-<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><ul>
-<li><h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3></li>
-<li><p>服务器接收到客户端发送的命令后，执行以下几个步骤：</p>
-<ul>
+<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3><ul>
+<li>服务器接收到客户端发送的命令后，执行以下几个步骤：<ul>
 <li>读取命令请求，缓存在客户端结构体中；</li>
 <li>执行命令，包含了以下四步：（1）查找命令实现；（2）执行预备工作；（3）调用命令的执行函数；（4）执行后续工作。</li>
 <li>将命令回复发送给客户端。</li>
 </ul>
 </li>
-<li><p>服务器每100毫秒执行一次<code>serverCron</code>函数。该函数主要的工作包括：更新服务器缓存、更新LRU时钟、管理、处理</p>
-</li>
+<li>服务器每100毫秒执行一次<code>serverCron</code>函数。该函数主要的工作包括：更新服务器缓存、更新LRU时钟、检查持久化条件、执行被延迟的BGREWRITEAOF操作。</li>
 </ul>
 <h2 id="多机数据库"><a href="#多机数据库" class="headerlink" title="多机数据库"></a>多机数据库</h2><h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><ul>
 <li>复制分为两个步骤：同步和命令传播。</li>
