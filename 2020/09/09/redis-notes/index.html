@@ -28,8 +28,10 @@
 <meta property="og:description" content="本文记录了《Redis设计与实现》中比较重要的内容。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/image-20200909235912232.png">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png">
+<meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png">
 <meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-09-09T16:00:44.570Z">
+<meta property="article:modified_time" content="2020-09-11T08:19:46.417Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="数据库">
 <meta name="twitter:card" content="summary">
@@ -197,7 +199,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-10 00:00:44" itemprop="dateModified" datetime="2020-09-10T00:00:44+08:00">2020-09-10</time>
+                <time title="修改时间：2020-09-11 16:19:46" itemprop="dateModified" datetime="2020-09-11T16:19:46+08:00">2020-09-11</time>
               </span>
 
           
@@ -230,10 +232,28 @@
 </ul>
 </li>
 </ul>
-<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3><h3 id="压缩链表"><a href="#压缩链表" class="headerlink" title="压缩链表"></a>压缩链表</h3><h3 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h3><ul>
+<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><ul>
+<li><h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3></li>
+<li><p>当SET内容不多，并且都是整数时，Redis使用整数集合作为底层实现。</p>
+</li>
+<li><p>整数集合的元素类型包括<code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。整数集合不支持降级操作。</p>
+</li>
+</ul>
+<h3 id="压缩链表"><a href="#压缩链表" class="headerlink" title="压缩链表"></a>压缩链表</h3><ul>
+<li>压缩列表是哈希键和集合键的底层实现之一，当数据量不大，并且列表键的列表项或者哈希键的键值是整型或者短字符串，就会使用压缩链表作为底层实现。</li>
+<li>压缩链表的节点有以下几个字段构成：previous_entry_length、encoding、content。<ul>
+<li>previous_entry_length：前一个字段的长度。如果小于254字节，那么这个字段只有一个字节；否则，该字段有五个字节，第一个字节的内容是254，后面的字节存储长度。</li>
+<li>encoding：内容的编码方式。</li>
+<li>content：具体内容。</li>
+</ul>
+</li>
+<li>压缩链表存在的问题是连锁更新：插入新的内容导致前面entry的长度变化，会导致后面的entry需要更多的内存保存previous_entry_length，造成后续字段长度都发生了变化。这样会造成内存的多次重新分配。</li>
+</ul>
+<h3 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h3><ul>
 <li><p>Redis一共有五种对象，分别为：字符串对象、列表对象、哈希对象、集合对象、有序集合对象。每种对象在不同的使用场景下有不同的底层编码方式，可以优化使用效率。</p>
 <img src="/2020/09/09/redis-notes/image-20200909235912232.png" class="">
 </li>
+<li></li>
 <li><p>Redis通过引用计数的方式实现内存的自动回收。同时，通过引用计数也可以实现对象的复用。</p>
 </li>
 </ul>
@@ -248,11 +268,17 @@
 <li>Redis采用惰性删除和定期删除两种过期删除策略。</li>
 </ul>
 <h3 id="RDB持久化"><a href="#RDB持久化" class="headerlink" title="RDB持久化"></a>RDB持久化</h3><ul>
-<li>RDB持久化通过保存当前Redis数据库状态实现持久化。</li>
+<li>RDB持久化通过保存当前Redis数据库状态实现持久化。RDB有两种命令可以实现持久化操作：SAVE和BGSAVE。<ul>
+<li>SAVE操作阻塞当前进程，直到持久化操作完成，服务器不会执行新的命令。</li>
+<li>BGSAVE操作创建一个子进程执行持久化操作，在这个期间，服务器依旧可以执客户端发送的命令。</li>
+</ul>
+</li>
+<li>写入RDB文件的过程中，服务器会检查每个键是否是过期的，知写入没有过期的键。在载入RDB文件的过程中，如果服务器是在主模式下运行，那么会检查键是否过期；否则会把RDB文件全部载入。</li>
+<li></li>
 </ul>
 <h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><ul>
 <li>AOF持久化通过保存Redis服务器的写命令实现保存数据库的状态。</li>
-<li>为防止AOF文件过大，服务器定期执行AOF重写操作。重写操作获取当前数据库的状态，使用更少的写命令得到当前数据库的状态。</li>
+<li>为防止AOF文件过大，服务器定期执行AOF重写操作，使用更少的指令达到相同的数据库状态，减少冗余。</li>
 <li>在重写的过程中，服务器可能会接收到新的写命令，造成AOF文件状态与当前数据库状态的不一致。为了解决这个问题，Redis设置了一个AOF缓冲区。在AOF重写过程中，服务器将接收到的写命令保存到缓冲区中。当子进程的AOF重写操作完成后，把缓冲区的内容写入到新的AOF文件中。</li>
 </ul>
 <h3 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h3><ul>
@@ -272,14 +298,17 @@
 </ul>
 </li>
 </ul>
-<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3><ul>
-<li>服务器接收到客户端发送的命令后，执行以下几个步骤：<ul>
+<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><ul>
+<li><h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3></li>
+<li><p>服务器接收到客户端发送的命令后，执行以下几个步骤：</p>
+<ul>
 <li>读取命令请求，缓存在客户端结构体中；</li>
 <li>执行命令，包含了以下四步：（1）查找命令实现；（2）执行预备工作；（3）调用命令的执行函数；（4）执行后续工作。</li>
 <li>将命令回复发送给客户端。</li>
 </ul>
 </li>
-<li>服务器每100毫秒执行一次<code>serverCron</code>函数。该函数主要的工作包括：</li>
+<li><p>服务器每100毫秒执行一次<code>serverCron</code>函数。该函数主要的工作包括：更新服务器缓存、更新LRU时钟、管理、处理</p>
+</li>
 </ul>
 <h2 id="多机数据库"><a href="#多机数据库" class="headerlink" title="多机数据库"></a>多机数据库</h2><h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><ul>
 <li>复制分为两个步骤：同步和命令传播。</li>
@@ -330,15 +359,13 @@
 <li><p>每个槽的指派信息记录在一个bitmap中，同时记录了集群中所有槽指派信息。在集群中，每个节点通过消息传播的方式，告知集群内其他的节点自己负责的槽。</p>
 </li>
 <li><p>当客户端向集群内的任意节点发送和键相关的命令时，节点需要计算出键属于哪个槽，并且判断这个槽是否由自己负责的。如果不是自己负责的，需要给客户端发送一个MOVE错误。客户端接收到这个消息后，将会被重定向到正确的节点，然后再次发送相同的命令。</p>
+<img src="/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png" class="">
 </li>
-</ul>
-<ul>
 <li><p>Redis使用CRC-16校验和确定每个数据键属于哪个槽。</p>
 </li>
 <li><p>Redis集群提供了重新分片的功能。重新分片指的是将任意数量的指派给某个节点（源节点）的槽划分给另一个节点（目标节点），Redis使用管理软件<code>redis-trib</code>执行。重新分片操作可以在线进行，集群不需要下线。在操作过程中，如果客户端向源节点发送数据键相关的命令，并且数据键属于正在被迁移的槽，那么源节点首先在自己的数据库查找键，如果不存在，向客户端发送一个ASK错误。客户端接收到这个错误后，将会重定向到目标节点，并且重新执行数据键相关的命令。</p>
+<img src="/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png" class="">
 </li>
-</ul>
-<ul>
 <li><p>MOVE错误和ASK错误的区别如下：</p>
 <ul>
 <li>MOVE命令的效果是永久性的。</li>
@@ -380,7 +407,10 @@
     <a href="/2020/09/06/sangfor/" rel="prev" title="深信服实习面经">
       <i class="fa fa-chevron-left"></i> 深信服实习面经
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/10/coroutine/" rel="next" title="协程原理简介">
+      协程原理简介 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -454,14 +484,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
