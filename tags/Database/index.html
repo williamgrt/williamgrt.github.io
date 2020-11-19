@@ -22,7 +22,7 @@
     <meta name="description" content="">
     <meta property="og:type" content="website">
 <meta property="og:title" content="William&#39;s blog">
-<meta property="og:url" content="https://williamgrt.github.io/archives/2020/index.html">
+<meta property="og:url" content="https://williamgrt.github.io/tags/Database/index.html">
 <meta property="og:site_name" content="William&#39;s blog">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="williamgrt">
@@ -373,77 +373,6 @@
         <a class="post-tag" href="javascript:void(0);" data-tags = "Database">Database</a>
     
         <a class="post-tag" href="javascript:void(0);" data-tags = "Redis">Redis</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2020/09/06/sangfor/" >
-            
-                <span>深信服实习面经</span>
-        </a>
-        <div class="abstract-content">
-            <p>最近面试了深信服“星耀计划”实习生（C++开发：网络安全方向）。以下是大致的面试问题记录（有些记不清了）。</p>
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/09/06</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "interview">interview</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2020/06/19/IO-multiplexing/" >
-            
-                <span>I/O多路复用</span>
-        </a>
-        <div class="abstract-content">
-            <h2 id="为什么需要I-O多路复用"><a href="#为什么需要I-O多路复用" class="headerlink" title="为什么需要I/O多路复用"></a>为什么需要I/O多路复用</h2><p>大部分应用都可以使用阻塞I/O模型就足够完成任务了。但是，有些应用需要满足以下的条件：</p>
-<ul>
-<li>使用非阻塞的方式检查文件描述符是否可以执行I/O操作。</li>
-<li>可以同时检查多个文件描述符。</li>
-</ul>
-<p>我们可以使用非阻塞I/O或者多进程多线程的方式满足以上需求，但是又会带来新的问题：</p>
-<ul>
-<li>如果文件描述符很多，非阻塞I/O需要不停轮询每个文件描述符，造成CPU的浪费。</li>
-<li>如果每个文件描述符都创建一个新进程执行I/O操作，会带来开销过于昂贵的问题，包括创建进程、维护进程、父子进程间通信。</li>
-<li>多线程的方法虽然会占用较少的资源，但是正确地编写线程间通信代码是一项非常复杂的工作。</li>
-</ul>
-<p>我们可以使用I/O多路复用技术解决上面提到的问题。</p>
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/06/19</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Operating System">Operating System</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Network Programing">Network Programing</a>
     
 </div>
             
