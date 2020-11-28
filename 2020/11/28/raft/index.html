@@ -27,13 +27,13 @@
 <meta property="og:site_name" content="williamgrt&#39;s Blog">
 <meta property="og:description" content="最近写完了MIT-6.824的Lab，收获非常多。所有Lab的内容加在一起是实现一个基于Raft的分布式可分片的容错Key&#x2F;Value Service，收获非常多，对于编写并发代码以及调试分布式程序有了更深刻的认识。写这几篇文章的目的是为了总结实现过程中的思路以及遇到的问题，如果能够对他人的实现有一点点启发，那就更好了 :） Raft原理Raft是一种共识算法。为了实现共识，Raft首先选举出一个">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://williamgrt.github.io/Users/grt/Documents/GitHub/williamgrt.github.io/blog/source/_drafts/raft/ElectionTimer.jpg">
+<meta property="og:image" content="https://williamgrt.github.io/2020/11/28/raft/ElectionTimer.jpg">
 <meta property="article:published_time" content="2020-11-28T08:56:01.000Z">
-<meta property="article:modified_time" content="2020-11-28T08:56:01.568Z">
+<meta property="article:modified_time" content="2020-11-28T09:00:22.622Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="distributed system">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://williamgrt.github.io/Users/grt/Documents/GitHub/williamgrt.github.io/blog/source/_drafts/raft/ElectionTimer.jpg">
+<meta name="twitter:image" content="https://williamgrt.github.io/2020/11/28/raft/ElectionTimer.jpg">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     
@@ -287,7 +287,7 @@ height:50vh;
                 
                 
                     <div class="post-intro-read">
-                        <span>字数统计: <span class="post-count word-count">1.6k</span>阅读时长: <span class="post-count reading-time">5 min</span></span>
+                        <span>字数统计: <span class="post-count word-count">655</span>阅读时长: <span class="post-count reading-time">2 min</span></span>
                     </div>
                 
                 <div class="post-intro-meta">
@@ -428,32 +428,15 @@ height:50vh;
 <h2 id="Raft实现"><a href="#Raft实现" class="headerlink" title="Raft实现"></a>Raft实现</h2><p>Raft实现网上已经有很多文章讲解了，这里也就不赘述了。如果在实现上没有思路，可以看一下参考资料[2]。一些结构上的建议可以阅读参考资料[3]和参考资料[4]。正确实现Raft的关键就是根据论文的Figure 2，把英语翻译成代码。如果是严格按照Figure 2写的，基本不会出现大问题。</p>
 <p>这部分主要讲几个实现上的坑，或者说是注意事项。</p>
 <h3 id="ElectionTimer"><a href="#ElectionTimer" class="headerlink" title="ElectionTimer"></a>ElectionTimer</h3><p>ElectionTimer的作用是让节点等待一段时间，如果接收到了主节点发送的<code>AppendEntires</code>包，就重置该定时器。否则，定时器超时后，节点转变为<code>Candidate</code>并发起选举。如果在选举的过程中又超时了，节点就需要重新发起一轮选举，直到某个节点接收到大部分节点的投票并成为新的主节点为止。整个流程如下。</p>
-<p><img src="/Users/grt/Documents/GitHub/williamgrt.github.io/blog/source/_drafts/raft/ElectionTimer.jpg" alt="ElectionTimer"></p>
-<p>在实现中，有以下几个点需要注意，同时也是我认为有可能会出错得地方。</p>
-<p><strong>定时器的超时时间必须是随机的</strong>。如果所有定时器的超时时间是一致的，它们会在同一时间失效，在同一时间转换为Candidate状态并投票给自己，这样所有的节点都不能获得多数同意并成为一个主节点，选举就会无休无止的进行。</p>
-<p><strong>定时器的超时时长必须要大于心跳间隔</strong>。如果定时器间隔过小，节点还没有收到<code>Leader</code>的心跳包就会超时，开始一轮新的选举。尽管所有节点已经达成了共识，但是还是会有节点发起新的选举。（血泪教训，导致后面的实现总是有问题，查代码还查不出来，明明逻辑都是没问题的，结果打印了重置定时器日志才发现超时时长设置的问题）</p>
-<p><strong>重置定时器的时机</strong>。论文里面提到的重置定时器只有以下几个地方：接收到了当前主节点发送的<code>AppendEntires</code>包、定时器超时自己成为Candidate、投票给另一个Candidate。其他时候不能重置定时器。论文中有一个地方没有写明白：当一个Leader收到了一个RPC reply，并且发现了当前的term已经大于自己的term，需要转变为Follower，此时需不需要重置定时器？（我个人认为需要，根据论文Figure 3，Leader转变为Follower时需要等待一段时间，超时后才进入Candidate状态，如果不重置可能会立刻进入Candidate状态）</p>
-<h3 id="AppendEntries"><a href="#AppendEntries" class="headerlink" title="AppendEntries"></a>AppendEntries</h3><p><strong>注意RPC reply的处理</strong>。Figure 2对于RPC request的处理已经讲的很详细了，按照流程实现即可。但是，论文并没有对RPC reply的响应作出什么规定。参考资料建议的是检查当前节点的Term的发送请求的Term是否是一致的，如果不一致，说明节点在RPC的发送前后出现了状态变更，需要直接丢弃。并且，在此之前需要先检查reply.Term，确保如果Leader已经落后则进入Follower状态。</p>
-<p><strong>不要截断Follower的log</strong>。处理Follower的log需要严格按照论文的说明执行。这样做的原因在于：网络是不可靠的，容易出现延迟或者丢包的情况，导致先发送的RPC后到达Follower，发送和接收RPC的顺序是不确定的。</p>
-<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p><strong>分布式系统的调试要靠日志</strong>。因为分布式系统经常会出现莫名其妙的问题，单步调试基本是行不通的，需要在系统崩溃或者测试失败后观察输出日志，反推系统出故障时的状态，检查是否存在实现上的问题。我个人推荐的做法是把每个对象（Raft节点、RPC request、RPC response、Timer）内部状态打印出来，然后根据打印的日志推断系统变换。例如，Raft节点的打印日志可以如下实现：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rf *Raft)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> fmt.Sprintf(<span class="string">"[%s:%d;Term:%d;VotedFor:%d;Leader:%d;LogLen:%d;CommitIndex:%d;LastApplied:%d;LastIncludedIndex:%d]"</span>,</span><br><span class="line">		rf.state, rf.me, rf.currentTerm, rf.votedFor, rf.leaderId, <span class="built_in">len</span>(rf.log), rf.commitIndex, rf.lastApplied, rf.lastIncludedIndex)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这样做的好处是可以明确是哪个节点出问题了，调试时更有针对性。</p>
-<p>同时，也可以通过在加锁/解锁处添加日志，判断自己的系统是否出现死锁情况（加了锁但是没有解锁）。</p>
-<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>[1] Raft paper (<a href="https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf" target="_blank" rel="noopener">https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf</a>)</p>
-<p>[2] 助教写的Student Guide (<a href="https://thesquareplanet.com/blog/students-guide-to-raft/" target="_blank" rel="noopener">https://thesquareplanet.com/blog/students-guide-to-raft/</a>)</p>
-<p>[3] Raft structure advice </p>
-<p>[4] Raft lock advice</p>
-<p>[5] Raft实现细节汇总 </p>
-
+<p><img src="/2020/11/28/raft/ElectionTimer.jpg" class="" title="% }&lt;&#x2F;p&gt; &lt;p&gt;在实现中，有以下几个点需要注意，同时也是我认为有可能会出错得地方。&lt;&#x2F;p&gt; &lt;p&gt;&lt;strong&gt;定时器的超时时间必须是随机的&lt;&#x2F;strong&gt;。如果所有定时器的超时时间是一致的，它们会在同一时间失效，在同一时间转换为Candidate状态并投票给自己，这样所有的节点都不能获得多数同意并成为一个主节点，选举就会无休无止的进行。&lt;&#x2F;p&gt; &lt;p&gt;&lt;strong&gt;定时器的超时时长必须要大于心跳间隔&lt;&#x2F;strong&gt;。如果定时器间隔过小，节点还没有收到&lt;code&gt;Leader&lt;&#x2F;code&gt;的心跳包就会超时，开始一轮新的选举。尽管所有节点已经达成了共识，但是还是会有节点发起新的选举。（血泪教训，导致后面的实现总是有问题，查代码还查不出来，明明逻辑都是没问题的，结果打印了重置定时器日志才发现超时时长设置的问题）&lt;&#x2F;p&gt; &lt;p&gt;&lt;strong&gt;重置定时器的时机&lt;&#x2F;strong&gt;。论文里面提到的重置定时器只有以下几个地方：接收到了当前主节点发送的&lt;code&gt;AppendEntires&lt;&#x2F;code&gt;包、定时器超时自己成为Candidate、投票给另一个Candidate。其他时候不能重置定时器。论文中有一个地方没有写明白：当一个Leader收到了一个RPC reply，并且发现了当前的term已经大于自己的term，需要转变为Follower，此时需不需要重置定时器？（我个人认为需要，根据论文Figure 3，Leader转变为Follower时需要等待一段时间，超时后才进入Candidate状态，如果不重置可能会立刻进入Candidate状态）&lt;&#x2F;p&gt; &lt;h3 id&#x3D;AppendEntries&gt;&lt;a href&#x3D;#AppendEntries class&#x3D;headerlink title&#x3D;AppendEntries&gt;&lt;&#x2F;a&gt;AppendEntries&lt;&#x2F;h3&gt;&lt;p&gt;&lt;strong&gt;注意RPC reply的处理&lt;&#x2F;strong&gt;。Figure 2对于RPC request的处理已经讲的很详细了，按照流程实现即可。但是，论文并没有对RPC reply的响应作出什么规定。参考资料建议的是检查当前节点的Term的发送请求的Term是否是一致的，如果不一致，说明节点在RPC的发送前后出现了状态变更，需要直接丢弃。并且，在此之前需要先检查reply.Term，确保如果Leader已经落后则进入Follower状态。&lt;&#x2F;p&gt; &lt;p&gt;&lt;strong&gt;不要截断Follower的log&lt;&#x2F;strong&gt;。处理Follower的log需要严格按照论文的说明执行。这样做的原因在于：网络是不可靠的，容易出现延迟或者丢包的情况，导致先发送的RPC后到达Follower，发送和接收RPC的顺序是不确定的。&lt;&#x2F;p&gt; &lt;h3 id&#x3D;调试&gt;&lt;a href&#x3D;#调试 class&#x3D;headerlink title&#x3D;调试&gt;&lt;&#x2F;a&gt;调试&lt;&#x2F;h3&gt;&lt;p&gt;&lt;strong&gt;分布式系统的调试要靠日志&lt;&#x2F;strong&gt;。因为分布式系统经常会出现莫名其妙的问题，单步调试基本是行不通的，需要在系统崩溃或者测试失败后观察输出日志，反推系统出故障时的状态，检查是否存在实现上的问题。我个人推荐的做法是把每个对象（Raft节点、RPC request、RPC response、Timer）内部状态打印出来，然后根据打印的日志推断系统变换。例如，Raft节点的打印日志可以如下实现：&lt;&#x2F;p&gt; &lt;figure class&#x3D;highlight go&gt;&lt;table&gt;&lt;tr&gt;&lt;td class&#x3D;gutter&gt;&lt;pre&gt;&lt;span class&#x3D;line&gt;1&lt;&#x2F;span&gt;&lt;br&gt;&lt;span class&#x3D;line&gt;2&lt;&#x2F;span&gt;&lt;br&gt;&lt;span class&#x3D;line&gt;3&lt;&#x2F;span&gt;&lt;br&gt;&lt;span class&#x3D;line&gt;4&lt;&#x2F;span&gt;&lt;br&gt;&lt;&#x2F;pre&gt;&lt;&#x2F;td&gt;&lt;td class&#x3D;code&gt;&lt;pre&gt;&lt;span class&#x3D;line&gt;&lt;span class&#x3D;function&gt;&lt;span class&#x3D;keyword&gt;func&lt;&#x2F;span&gt; &lt;span class&#x3D;params&gt;(rf *Raft)&lt;&#x2F;span&gt; &lt;span class&#x3D;title&gt;String&lt;&#x2F;span&gt;&lt;span class&#x3D;params&gt;()&lt;&#x2F;span&gt; &lt;span class&#x3D;title&gt;string&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; &amp;#123;&lt;&#x2F;span&gt;&lt;br&gt;&lt;span class&#x3D;line&gt; &lt;span class&#x3D;keyword&gt;return&lt;&#x2F;span&gt; fmt.Sprintf(&lt;span class&#x3D;string&gt;[%s:%d;Term:%d;VotedFor:%d;Leader:%d;LogLen:%d;CommitIndex:%d;LastApplied:%d;LastIncludedIndex:%d]&lt;&#x2F;span&gt;,&lt;&#x2F;span&gt;&lt;br&gt;&lt;span class&#x3D;line&gt; rf.state, rf.me, rf.currentTerm, rf.votedFor, rf.leaderId, &lt;span class&#x3D;built_in&gt;len&lt;&#x2F;span&gt;(rf.log), rf.commitIndex, rf.lastApplied, rf.lastIncludedIndex)&lt;&#x2F;span&gt;&lt;br&gt;&lt;span class&#x3D;line&gt;&amp;#125;&lt;&#x2F;span&gt;&lt;br&gt;&lt;&#x2F;pre&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;table&gt;&lt;&#x2F;figure&gt; &lt;p&gt;这样做的好处是可以明确是哪个节点出问题了，调试时更有针对性。&lt;&#x2F;p&gt; &lt;p&gt;同时，也可以通过在加锁&#x2F;解锁处添加日志，判断自己的系统是否出现死锁情况（加了锁但是没有解锁）。&lt;&#x2F;p&gt; &lt;h2 id&#x3D;References&gt;&lt;a href&#x3D;#References class&#x3D;headerlink title&#x3D;References&gt;&lt;&#x2F;a&gt;References&lt;&#x2F;h2&gt;&lt;p&gt;[1] Raft paper (&lt;a href&#x3D;https:&#x2F;&#x2F;pdos.csail.mit.edu&#x2F;6.824&#x2F;papers&#x2F;raft-extended.pdf&gt;https:&#x2F;&#x2F;pdos.csail.mit.edu&#x2F;6.824&#x2F;papers&#x2F;raft-extended.pdf&lt;&#x2F;a&gt;)&lt;&#x2F;p&gt; &lt;p&gt;[2] 助教写的Student Guide (&lt;a href&#x3D;https:&#x2F;&#x2F;thesquareplanet.com&#x2F;blog&#x2F;students-guide-to-raft&#x2F;&gt;https:&#x2F;&#x2F;thesquareplanet.com&#x2F;blog&#x2F;students-guide-to-raft&#x2F;&lt;&#x2F;a&gt;)&lt;&#x2F;p&gt; &lt;p&gt;[3] Raft structure advice &lt;&#x2F;p&gt; &lt;p&gt;[4] Raft lock advice&lt;&#x2F;p&gt; &lt;p&gt;[5] Raft实现细节汇总 &lt;&#x2F;p&gt;">
     </article>
     <!-- license  -->
     
         <div class="license-wrapper">
             <p>原文作者：<a href="https://williamgrt.github.io">williamgrt</a>
             <p>原文链接：<a href="https://williamgrt.github.io/2020/11/28/raft/">https://williamgrt.github.io/2020/11/28/raft/</a>
-            <p>发表日期：<a href="https://williamgrt.github.io/2020/11/28/raft/">十一月 28日 2020, 4:56:01 下午</a>
-            <p>更新日期：<a href="https://williamgrt.github.io/2020/11/28/raft/">November 28th 2020, 4:56:01 pm</a>
+            <p>发表日期：<a href="https://williamgrt.github.io/2020/11/28/raft/">November 28th 2020, 4:56:01 pm</a>
+            <p>更新日期：<a href="https://williamgrt.github.io/2020/11/28/raft/">November 28th 2020, 5:00:22 pm</a>
             <p>版权声明：本文采用<a rel="license noopener" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
         </div>
     
@@ -582,7 +565,7 @@ top:50vh;
         <div class="toc-catalog">
             <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
         </div>
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Raft原理"><span class="toc-number">1.</span> <span class="toc-text">Raft原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Raft实现"><span class="toc-number">2.</span> <span class="toc-text">Raft实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ElectionTimer"><span class="toc-number">2.1.</span> <span class="toc-text">ElectionTimer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AppendEntries"><span class="toc-number">2.2.</span> <span class="toc-text">AppendEntries</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#调试"><span class="toc-number">2.3.</span> <span class="toc-text">调试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">3.</span> <span class="toc-text">References</span></a></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Raft原理"><span class="toc-number">1.</span> <span class="toc-text">Raft原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Raft实现"><span class="toc-number">2.</span> <span class="toc-text">Raft实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ElectionTimer"><span class="toc-number">2.1.</span> <span class="toc-text">ElectionTimer</span></a></li></ol></li></ol>
     </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
