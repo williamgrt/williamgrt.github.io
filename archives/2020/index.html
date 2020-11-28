@@ -354,6 +354,38 @@
     
     
     <article class="index-post">
+        <a class="abstract-title" href = "/2020/11/28/raft/" >
+            
+                <span>Raft协议的实现</span>
+        </a>
+        <div class="abstract-content">
+            最近写完了MIT-6.824的Lab，收获非常多。所有Lab的内容加在一起是实现一个基于Raft的分布式可分片的容错Key/Value Service，收获非常多，对于编写并发代码以及调试分布式程序有了更深刻的认识。写这几篇文章的目的是为了总结实现过程中的思路以及遇到的问题，如果能够对他人的实现有一点点启发，那就更好了 :）
+Raft原理Raft是一种共识算法。为了实现共识，Raft首先选举出一个Leader，然后交由Leader处理日志的权限。Leader接受客户端发送的日志，复制到其他的服务器上，并告知其他服务器什么时候可以把日志保存到状态机中。Raft算法需要保证以下的特性：
+
+E...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/11/28</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "distributed system">distributed system</a>
+    
+</div>
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
         <a class="abstract-title" href = "/2020/09/09/redis-notes/" >
             
                 <span>《Redis设计与实现》读书笔记</span>
@@ -554,9 +586,20 @@
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 3
+        Total : 4
         </div>
         <!-- search  -->
         
@@ -569,6 +612,11 @@
     
     <div class="archive-year"> 2020 </div>
     <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/28</span><a class="archive-post-title" href= "/2020/11/28/raft/" >Raft协议的实现</a>
+        </li>
     
     
         <li class="archive-post-item">
@@ -599,6 +647,8 @@
         <span class="sidebar-tag-name" data-tags="Database"><span class="iconfont-archer">&#xe606;</span>Database</span>
     
         <span class="sidebar-tag-name" data-tags="Redis"><span class="iconfont-archer">&#xe606;</span>Redis</span>
+    
+        <span class="sidebar-tag-name" data-tags="distributed system"><span class="iconfont-archer">&#xe606;</span>distributed system</span>
     
     </div>
     <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
