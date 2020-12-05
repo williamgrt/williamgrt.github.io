@@ -96,7 +96,7 @@
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png">
 <meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-11-23T08:23:49.625Z">
+<meta property="article:modified_time" content="2020-12-05T15:05:45.464Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Database">
 <meta property="article:tag" content="Redis">
@@ -411,6 +411,28 @@
 
 <h3 id="AOF-持久化"><a href="#AOF-持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h3><p>AOF 持久化通过保存 Redis 服务器的写命令实现保存数据库的状态。</p>
 <p>为防止 AOF 文件过大，服务器定期执行 AOF 重写操作，使用更少的指令达到相同的数据库状态，减少冗余。</p>
+<p>可以通过设置 appendfsync 选项的值控制 AOF 文件的刷新行为。</p>
+<table>
+<thead>
+<tr>
+<th align="center">appendfsync 选项的值</th>
+<th align="center">AOF 刷新行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">always</td>
+<td align="center">将 aof_buf 缓冲区的所有内容写入，并同步到 AOF 文件中。</td>
+</tr>
+<tr>
+<td align="center">everysec</td>
+<td align="center">将 aof_buf 缓冲区的所有内容写入到 AOF 文件中，如果距离上次同步 AOF 文件的时间超过一秒，那么再次对 AOF 文件进行同步，并且同步过程由专门的进程负责。</td>
+</tr>
+<tr>
+<td align="center">no</td>
+<td align="center">将 aof_buf 缓冲区的所有内容写入，不对 AOF 文件同步，具体的同步时间由操作系统决定。</td>
+</tr>
+</tbody></table>
+<p>appendfsync 选项的值直接决定了 AOF 持久化功能的效率和安全性。</p>
 <p>在重写的过程中，服务器可能会接收到新的写命令，造成 AOF 文件状态与当前数据库状态的不一致。为了解决这个问题，Redis 设置了一个 AOF 缓冲区。在 AOF 重写过程中，服务器将接收到的写命令保存到缓冲区中。当子进程的 AOF 重写操作完成后，把缓冲区的内容写入到新的 AOF 文件中。</p>
 <h3 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h3><p>Redis 是一个事件驱动程序，事件类型分为文件事件和时间事件。</p>
 <p>文件事件处理器基于 Reactor 模式开发，通过包装 I/O 多路复用函数实现。有两种类型的事件：</p>
@@ -445,14 +467,14 @@
 <li>部分重同步：用于断线重连后主从复制，如果条件允许，主服务器将在连接断开后接收到的写命令发送给从服务器，从而解决了断线重连后完全重同步的低效问题。</li>
 </ul>
 </li>
-<li>部分重同步的实现依赖于三个机制：复制偏移量、复制积压缓冲区、服务器的运行 id。<ul>
+</ul>
+<p>部分重同步的实现依赖于三个机制：复制偏移量、复制积压缓冲区、服务器的运行 id。</p>
+<ul>
 <li>复制偏移量用于确定主从服务器之间是否处于一致状态。如果主从服务器的复制偏移量相同，那么他们就处于一致状态；反之，他们就处于不一致状态。</li>
 <li>复制积压缓冲区保存主服务器在命令传输阶段发送的写命令。当从服务器发送 PSYNC 命令时，如果复制积压缓冲区的内容包含所有缺失的数据，那么执行部分重同步操作；反之，执行完全重同步操作。</li>
 <li>服务器的运行 id 用于确定从服务器复制的主服务器。当从服务保存的运行 id 和主服务器的运行 id 相同，那么主服务器可以尝试执行部分重同步操作；反之，主服务器需要使用完全重同步操作。</li>
-<li>从服务器通过心跳机制检测检查网络连接状态以及检测命令丢失情况。</li>
 </ul>
-</li>
-</ul>
+<p>从服务器通过心跳机制检测检查网络连接状态以及检测命令丢失情况。</p>
 <h3 id="Sentinel（哨兵机制）"><a href="#Sentinel（哨兵机制）" class="headerlink" title="Sentinel（哨兵机制）"></a>Sentinel（哨兵机制）</h3><p>由一个或者多个 Sentinel 实例组成的 Sentinel 系统可以监视任意多个主服务器，以及这些服务器下属的从服务器。如果被监视的主服务器下线，Sentinel 系统可以从下属的从服务器中选出一个服务器作为新的主服务器。Sentinel 保证了 Redis 系统的 ** 高可用性 **。</p>
 <p>Sentinel 和每个服务器（主服务器和从服务器）建立了一条命令连接和一条订阅连接。完成后，Sentinel 每 10 秒发送一次 INFO 命令获取主服务器的当前信息，用于更新主服务器实例。在这个过程中，如果 Sentinel 系统发现了新的从服务器，会和这个从服务器之间建立一条命令连接和一条订阅连接，用于更新从服务器实例。</p>
 <p>Sentinel 每 2 秒一次向主服务器和从服务器发送频道信息，并通过订阅连接接收频道消息，用于更新其他监视该服务器的 Sentinel 信息。当 Sentinel 发现了新的 Sentinel 后，会更新 <code>sentinels</code> 字典，并和该 Sentinel 建立一条命令连接（没有订阅连接）。</p>
