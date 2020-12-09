@@ -79,12 +79,12 @@
 
 
 
-<meta name="description" content="数据结构字典字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。 Redis 采用 MurmurHash2 算法计算哈希键值，采用链地址法解决哈希冲突。 当 Redis 的负载因子达到一定的大小，会采用 rehash 操作。执行 rehash 的时机如下：  当前数据库没有执行 BGSAVE 或 SAVE 指令，并且负载因子大于 1。 当前数据库正在执行 BGSAVE 或 SAV">
+<meta name="description" content="数据结构  字典  字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。 Redis 采用 MurmurHash2 算法计算哈希键值，采用链地址法解决哈希冲突。 当 Redis 的负载因子达到一定的大小，会采用 rehash 操作。执行 rehash 的时机如下：  当前数据库没有执行 BGSAVE 或 SAVE 指令，并且负载因子大于 1。 当前数据库正在执行 BGSAVE 或">
 <meta property="og:type" content="article">
 <meta property="og:title" content="《Redis 设计与实现》读书笔记">
 <meta property="og:url" content="https://williamgrt.github.io/2020/09/09/redis-notes/index.html">
 <meta property="og:site_name" content="williamgrt&#39;s Blog">
-<meta property="og:description" content="数据结构字典字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。 Redis 采用 MurmurHash2 算法计算哈希键值，采用链地址法解决哈希冲突。 当 Redis 的负载因子达到一定的大小，会采用 rehash 操作。执行 rehash 的时机如下：  当前数据库没有执行 BGSAVE 或 SAVE 指令，并且负载因子大于 1。 当前数据库正在执行 BGSAVE 或 SAV">
+<meta property="og:description" content="数据结构  字典  字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。 Redis 采用 MurmurHash2 算法计算哈希键值，采用链地址法解决哈希冲突。 当 Redis 的负载因子达到一定的大小，会采用 rehash 操作。执行 rehash 的时机如下：  当前数据库没有执行 BGSAVE 或 SAVE 指令，并且负载因子大于 1。 当前数据库正在执行 BGSAVE 或">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/image-20200909235912232.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-e39cf16d63d6cdb8a267a0990b10cb54c8bffe20.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-067f30b81066463cca9b46f4db8adb08b137da6e.png">
@@ -202,6 +202,36 @@
         </li>
       
         
+        <li class="menu-item menu-item-about">
+          <a href="/about/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives/%20" rel="section">
             
@@ -311,7 +341,7 @@
       
 
       
-        <h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><h3 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h3><p>字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。</p>
+        <h2 id="数据结构"><a href="# 数据结构" class="headerlink" title="数据结构"></a>数据结构 </h2><h3 id="字典"><a href="# 字典" class="headerlink" title="字典"></a> 字典 </h3><p> 字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。</p>
 <p>Redis 采用 MurmurHash2 算法计算哈希键值，采用链地址法解决哈希冲突。</p>
 <p>当 Redis 的负载因子达到一定的大小，会采用 rehash 操作。执行 rehash 的时机如下：</p>
 <ul>
@@ -326,7 +356,7 @@
 <li>每当执行查找、插入、删除操作时，顺带对 <code>ht [0][rehashidx]</code> 的所有元素执行 rehash 操作到 <code>ht [1]</code> 中，完成后，rehashidx++。</li>
 <li>当所有的键值对迁移完毕后，回收 <code>ht [0]</code> 的内存空间，把 <code>ht [1]</code> 变为 <code>ht [0]</code>，同时新建一个 <code>ht [1]</code> 用于下一次的 rehash 过程。</li>
 </ul>
-<h3 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h3><p>跳跃表是一种有序的数据结构，性能和平衡树相差不大，并且实现简单。</p>
+<h3 id="跳跃表"><a href="# 跳跃表" class="headerlink" title="跳跃表"></a>跳跃表 </h3><p> 跳跃表是一种有序的数据结构，性能和平衡树相差不大，并且实现简单。</p>
 <p>Redis 使用 <code>zskiplistNode</code> 结构表示一个跳跃表节点，有以下几个成员：</p>
 <ul>
 <li>层：层高是一个 1-32 的随机数。包含前进指针和跨度两个属性。前进指针指向当前层的下一个节点，跨度记录了两者之间的距离，用于计算目标节点排位。</li>
@@ -334,9 +364,9 @@
 <li>分值：每个节点按照分值由小到大排序。如果分值相同，按照对象大小排序。</li>
 <li>成员：一个字符串对象。</li>
 </ul>
-<h3 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h3><p>当 SET 内容不多，并且都是整数时，Redis 使用整数集合作为底层实现。</p>
+<h3 id="整数集合"><a href="# 整数集合" class="headerlink" title="整数集合"></a>整数集合 </h3><p> 当 SET 内容不多，并且都是整数时，Redis 使用整数集合作为底层实现。</p>
 <p>整数集合的元素类型包括 <code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。整数集合不支持降级操作。</p>
-<h3 id="压缩链表"><a href="#压缩链表" class="headerlink" title="压缩链表"></a>压缩链表</h3><p>压缩列表是哈希键和集合键的底层实现之一，当数据量不大，并且列表键的列表项或者哈希键的键值是整型或者短字符串，就会使用压缩链表作为底层实现。</p>
+<h3 id="压缩链表"><a href="# 压缩链表" class="headerlink" title="压缩链表"></a>压缩链表 </h3><p> 压缩列表是哈希键和集合键的底层实现之一，当数据量不大，并且列表键的列表项或者哈希键的键值是整型或者短字符串，就会使用压缩链表作为底层实现。</p>
 <p>压缩链表的节点有以下几个字段构成：previous_entry_length、encoding、content。</p>
 <ul>
 <li>previous_entry_length：前一个字段的长度。如果小于 254 字节，那么这个字段只有一个字节；否则，该字段有五个字节，第一个字节的内容是 254，后面的字节存储长度。</li>
@@ -344,7 +374,7 @@
 <li>content：具体内容。</li>
 </ul>
 <p>压缩链表存在的问题是连锁更新：插入新的内容导致前面 entry 的长度变化，会导致后面的 entry 需要更多的内存保存 previous_entry_length，造成后续字段长度都发生了变化。这样会造成内存的多次重新分配。</p>
-<h3 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h3><p>Redis 一共有五种对象，分别为：字符串对象、列表对象、哈希对象、集合对象、有序集合对象。每种对象在不同的使用场景下有不同的底层编码方式，可以优化使用效率。</p>
+<h3 id="对象"><a href="# 对象" class="headerlink" title="对象"></a>对象</h3><p>Redis 一共有五种对象，分别为：字符串对象、列表对象、哈希对象、集合对象、有序集合对象。每种对象在不同的使用场景下有不同的底层编码方式，可以优化使用效率。</p>
 <img src="/2020/09/09/redis-notes/image-20200909235912232.png" class="">
 
 <p>STRING 对象编码方式分为三种：int、embstr 和 raw。embstr 针对短字符串进行了优化，减少了内存分配和释放的次数，并且由于采用连续存储的方式，提升了缓存的命中率。</p>
@@ -362,7 +392,7 @@
 <p>skilplist 编码方式同时使用了哈希表和跳跃表，兼顾了精确查找和范围查找的效率。</p>
 </blockquote>
 <p>Redis 通过引用计数的方式实现内存的自动回收。同时，通过引用计数也可以实现对象的复用。</p>
-<h2 id="单机数据库"><a href="#单机数据库" class="headerlink" title="单机数据库"></a>单机数据库</h2><h3 id="键过期删除策略"><a href="#键过期删除策略" class="headerlink" title="键过期删除策略"></a>键过期删除策略</h3><p>Redis 把所有键的过期时间添加到一个过期字典中，检查过期字典就可以判断一个键是否过期。</p>
+<h2 id="单机数据库"><a href="# 单机数据库" class="headerlink" title="单机数据库"></a>单机数据库 </h2><h3 id="键过期删除策略"><a href="# 键过期删除策略" class="headerlink" title="键过期删除策略"></a> 键过期删除策略</h3><p>Redis 把所有键的过期时间添加到一个过期字典中，检查过期字典就可以判断一个键是否过期。</p>
 <p>过期删除策略分为三种：定时删除、惰性删除、定期删除。</p>
 <ul>
 <li>定时删除创建一个定时器，当定时器过期时，立刻删除数据键。这种策略对内存最为友好，但是会对 CPU 造成更多的负担。</li>
@@ -370,7 +400,7 @@
 <li>定期删除结合了二者的优点。</li>
 </ul>
 <p>Redis 采用惰性删除和定期删除两种过期删除策略。</p>
-<h3 id="RDB-持久化"><a href="#RDB-持久化" class="headerlink" title="RDB 持久化"></a>RDB 持久化</h3><p>RDB 持久化通过保存当前 Redis 数据库状态实现持久化。RDB 有两种命令可以实现持久化操作：SAVE 和 BGSAVE。</p>
+<h3 id="RDB- 持久化"><a href="#RDB- 持久化" class="headerlink" title="RDB 持久化"></a>RDB 持久化</h3><p>RDB 持久化通过保存当前 Redis 数据库状态实现持久化。RDB 有两种命令可以实现持久化操作：SAVE 和 BGSAVE。</p>
 <ul>
 <li>SAVE 操作阻塞当前进程，直到持久化操作完成，服务器不会执行新的命令。</li>
 <li>BGSAVE 操作创建一个子进程执行持久化操作，在这个期间，服务器依旧可以执客户端发送的命令。</li>
@@ -389,7 +419,7 @@
 <p>带过期时间的键值对结构如下</p>
 <img src="/2020/09/09/redis-notes/graphviz-23af1c5c65bc0be2a8d6ca776761bf10657561c0.png" class="">
 
-<h3 id="AOF-持久化"><a href="#AOF-持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h3><p>AOF 持久化通过保存 Redis 服务器的写命令实现保存数据库的状态。</p>
+<h3 id="AOF- 持久化"><a href="#AOF- 持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h3><p>AOF 持久化通过保存 Redis 服务器的写命令实现保存数据库的状态。</p>
 <p>为防止 AOF 文件过大，服务器定期执行 AOF 重写操作，使用更少的指令达到相同的数据库状态，减少冗余。</p>
 <p>可以通过设置 appendfsync 选项的值控制 AOF 文件的刷新行为。</p>
 <table>
@@ -414,7 +444,7 @@
 </tbody></table>
 <p>appendfsync 选项的值直接决定了 AOF 持久化功能的效率和安全性。</p>
 <p>在重写的过程中，服务器可能会接收到新的写命令，造成 AOF 文件状态与当前数据库状态的不一致。为了解决这个问题，Redis 设置了一个 AOF 缓冲区。在 AOF 重写过程中，服务器将接收到的写命令保存到缓冲区中。当子进程的 AOF 重写操作完成后，把缓冲区的内容写入到新的 AOF 文件中。</p>
-<h3 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h3><p>Redis 是一个事件驱动程序，事件类型分为文件事件和时间事件。</p>
+<h3 id="事件"><a href="# 事件" class="headerlink" title="事件"></a>事件</h3><p>Redis 是一个事件驱动程序，事件类型分为文件事件和时间事件。</p>
 <p>文件事件处理器基于 Reactor 模式开发，通过包装 I/O 多路复用函数实现。有两种类型的事件：</p>
 <ul>
 <li>可读事件：客户端执行 write 操作、客户端执行 close 操作、客户端执行 connect 操作；</li>
@@ -429,17 +459,17 @@
 <ul>
 <li>原因：Redis 服务器只有一个周期性事件，使用链表不会影响性能。</li>
 </ul>
-<h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><p>Redis 使用一个链表保存所有建立连接的客户端，客户端结构体保存了客户端相关的属性。</p>
+<h3 id="客户端"><a href="# 客户端" class="headerlink" title="客户端"></a>客户端</h3><p>Redis 使用一个链表保存所有建立连接的客户端，客户端结构体保存了客户端相关的属性。</p>
 <p>输入缓冲区保存客户端输入的命令。这个缓冲区是可以动态扩展的，但是最大大小不能超过 1GB。</p>
 <p>输出缓冲区保存服务端的响应，由固定大小缓冲区和可变大小缓冲区组成。</p>
-<h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3><p>服务器接收到客户端发送的命令后，执行以下几个步骤：</p>
+<h3 id="服务器"><a href="# 服务器" class="headerlink" title="服务器"></a>服务器 </h3><p> 服务器接收到客户端发送的命令后，执行以下几个步骤：</p>
 <ul>
 <li>读取命令请求，缓存在客户端结构体中；</li>
 <li>执行命令，包含了以下四步：（1）查找命令实现；（2）执行预备工作；（3）调用命令的执行函数；（4）执行后续工作。</li>
 <li>将命令回复发送给客户端。</li>
 </ul>
 <p>服务器每 100 毫秒执行一次 <code>serverCron</code> 函数。该函数主要的工作包括：更新服务器缓存、更新 LRU 时钟、检查持久化条件、执行被延迟的 BGREWRITEAOF 操作。</p>
-<h2 id="多机数据库"><a href="#多机数据库" class="headerlink" title="多机数据库"></a>多机数据库</h2><h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><p>复制分为两个步骤：同步和命令传播。</p>
+<h2 id="多机数据库"><a href="# 多机数据库" class="headerlink" title="多机数据库"></a>多机数据库 </h2><h3 id="复制"><a href="# 复制" class="headerlink" title="复制"></a> 复制 </h3><p> 复制分为两个步骤：同步和命令传播。</p>
 <ul>
 <li>命令传播：主服务器会将写命令发送给从服务器。</li>
 <li>同步：同步分为完全重同步和部分重同步：<ul>
@@ -481,7 +511,7 @@
 <li>删除和主服务器断开连接超过 down-after-milliseconds*10 的从服务器（保证从服务器的数据内容都是尽可能新的）。</li>
 <li>之后，领头 Sentinel 根据服务器的优先级排序，选出优先级最大的从服务器。如果有多个最高优先级的从服务器，选择复制偏移量最大的从服务器。如果有多个优先级最高、复制偏移量最大的从服务器，选择 ID 最小的从服务器。</li>
 </ul>
-<h3 id="集群"><a href="#集群" class="headerlink" title="集群"></a>集群</h3><p>节点通过 CLUSTER MEET 命令连接。当节点 A 和节点 B 完成握手后，节点 A 通过 Gossip 协议扩散给所在集群的其他节点，告知节点 B 已经加入到集群中了。</p>
+<h3 id="集群"><a href="# 集群" class="headerlink" title="集群"></a>集群 </h3><p> 节点通过 CLUSTER MEET 命令连接。当节点 A 和节点 B 完成握手后，节点 A 通过 Gossip 协议扩散给所在集群的其他节点，告知节点 B 已经加入到集群中了。</p>
 <blockquote>
 <p>Gossip 协议的执行过程如下：Gossip 过程是由种子节点发起，当一个种子节点有状态需要更新到网络中的其他节点时，它会随机的选择周围几个节点散播消息，收到消息的节点也会重复该过程，直至最终网络中所有的节点都收到了消息。这个过程可能需要一定的时间，由于不能保证某个时刻所有节点都收到消息，但是理论上最终所有节点都会收到消息，因此它是一个最终一致性协议。</p>
 </blockquote>
@@ -695,7 +725,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字典"><span class="nav-number">1.1.</span> <span class="nav-text">字典</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.2.</span> <span class="nav-text">跳跃表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整数集合"><span class="nav-number">1.3.</span> <span class="nav-text">整数集合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩链表"><span class="nav-number">1.4.</span> <span class="nav-text">压缩链表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象"><span class="nav-number">1.5.</span> <span class="nav-text">对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单机数据库"><span class="nav-number">2.</span> <span class="nav-text">单机数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#键过期删除策略"><span class="nav-number">2.1.</span> <span class="nav-text">键过期删除策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB-持久化"><span class="nav-number">2.2.</span> <span class="nav-text">RDB 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF-持久化"><span class="nav-number">2.3.</span> <span class="nav-text">AOF 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件"><span class="nav-number">2.4.</span> <span class="nav-text">事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端"><span class="nav-number">2.5.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器"><span class="nav-number">2.6.</span> <span class="nav-text">服务器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多机数据库"><span class="nav-number">3.</span> <span class="nav-text">多机数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制"><span class="nav-number">3.1.</span> <span class="nav-text">复制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sentinel（哨兵机制）"><span class="nav-number">3.2.</span> <span class="nav-text">Sentinel（哨兵机制）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群"><span class="nav-number">3.3.</span> <span class="nav-text">集群</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字典"><span class="nav-number">1.1.</span> <span class="nav-text"> 字典 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.2.</span> <span class="nav-text">跳跃表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整数集合"><span class="nav-number">1.3.</span> <span class="nav-text">整数集合 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩链表"><span class="nav-number">1.4.</span> <span class="nav-text">压缩链表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象"><span class="nav-number">1.5.</span> <span class="nav-text">对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单机数据库"><span class="nav-number">2.</span> <span class="nav-text">单机数据库 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#键过期删除策略"><span class="nav-number">2.1.</span> <span class="nav-text"> 键过期删除策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB- 持久化"><span class="nav-number">2.2.</span> <span class="nav-text">RDB 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF- 持久化"><span class="nav-number">2.3.</span> <span class="nav-text">AOF 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件"><span class="nav-number">2.4.</span> <span class="nav-text">事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端"><span class="nav-number">2.5.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器"><span class="nav-number">2.6.</span> <span class="nav-text">服务器 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多机数据库"><span class="nav-number">3.</span> <span class="nav-text">多机数据库 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制"><span class="nav-number">3.1.</span> <span class="nav-text"> 复制 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sentinel（哨兵机制）"><span class="nav-number">3.2.</span> <span class="nav-text">Sentinel（哨兵机制）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群"><span class="nav-number">3.3.</span> <span class="nav-text">集群 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>
