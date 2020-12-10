@@ -94,7 +94,7 @@
     root: '/',
     scheme: 'Gemini',
     version: '5.1.4',
-    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
     fancybox: true,
     tabs: true,
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
@@ -333,6 +333,37 @@
           
 
           
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1.6k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  5
+                </span>
+              
+            </div>
+          
 
           
 
@@ -350,53 +381,14 @@
 
       
         
-          
-            <p> 最近写完了 MIT-6.824 的 Lab，收获非常多。所有 Lab 的内容加在一起是实现一个基于 Raft 的分布式可分片的容错 Key/Value Service，收获非常多，对于编写并发代码以及调试分布式程序有了更深刻的认识。写这几篇文章的目的是为了总结实现过程中的思路以及遇到的问题，如果能够对他人的实现有一点点启发，那就更好了 :）</p>
-<!-- next -->
-
-<h2 id="Raft- 原理"><a href="#Raft- 原理" class="headerlink" title="Raft 原理"></a>Raft 原理 </h2><p>Raft 是一种共识算法。为了实现共识，Raft 首先选举出一个 Leader，然后交由 Leader 处理日志的权限。Leader 接受客户端发送的日志，复制到其他的服务器上，并告知其他服务器什么时候可以把日志保存到状态机中。Raft 算法需要保证以下的特性：</p>
-<ul>
-<li>Election Safety：在一个 Term 内至多有一个 Leader。</li>
-<li>Leader Append-Only：一个 Leader 只能添加日志，不能修改或者删除已经添加的日志。</li>
-<li>Log Matching：如果两个日志在同一个索引位置的日志条目 Term 相等，那么两个日志在该位置以及前面的日志都是相等的。</li>
-<li>Leader Completeness：如果一条日志在当前的 Term 内已经提交，那么在之后的 Term 中，这条日志一定会存在在 Leader 中。</li>
-<li>State Machine Safety：如果一条日志已经 Apply 到了复制状态机的特定位置中，那么其他服务器不会在同样的位置 Apply 一条不一样的日志。（** 可以用于 Client 判断自己的命令是否已经被执行完毕 **）</li>
-</ul>
-<h2 id="Raft- 实现"><a href="#Raft- 实现" class="headerlink" title="Raft 实现"></a>Raft 实现 </h2><p>Raft 实现网上已经有很多文章讲解了，这里也就不赘述了。如果在实现上没有思路，可以看一下参考资料 [2]。一些结构上的建议可以阅读参考资料 [3] 和参考资料 [4]。正确实现 Raft 的关键就是根据论文的 Figure 2，把英语翻译成代码。如果是严格按照 Figure 2 写的，基本不会出现大问题。</p>
-<p> 这部分主要讲几个实现上的坑，或者说是注意事项。</p>
-<h3 id="ElectionTimer"><a href="#ElectionTimer" class="headerlink" title="ElectionTimer"></a>ElectionTimer</h3><p>ElectionTimer 的作用是让节点等待一段时间，如果接收到了主节点发送的 <code>AppendEntires</code> 包，就重置该定时器。否则，定时器超时后，节点转变为 <code>Candidate</code> 并发起选举。如果在选举的过程中又超时了，节点就需要重新发起一轮选举，直到某个节点接收到大部分节点的投票并成为新的主节点为止。整个流程如下。</p>
-<img src="/2020/11/28/raft/ElectionTimer.jpg" class="">
-
-<p> 在实现中，有以下几个点需要注意，同时也是我认为有可能会出错得地方。</p>
-<ol>
-<li><p> 定时器的超时时间必须是随机的。如果所有定时器的超时时间是一致的，它们会在同一时间失效，在同一时间转换为 <code>Candidate</code> 状态并投票给自己，这样所有的节点都不能获得多数同意并成为一个主节点，选举就会无休无止的进行。</p>
-</li>
-<li><p> 定时器的超时时长必须要大于心跳间隔。如果定时器间隔过小，节点还没有收到 <code>Leader</code> 的心跳包就会超时，开始一轮新的选举。尽管所有节点已经达成了共识，但是还是会有节点发起新的选举。（血泪教训，导致后面的实现总是有问题，查代码还查不出来，明明逻辑都是没问题的。结果打印了重置定时器日志才发现超时时长设置的问题）</p>
-</li>
-<li><p> 重置定时器的时机。论文里面提到的重置定时器只有以下几个地方：接收到了当前主节点发送的 <code>AppendEntires</code> 包、定时器超时自己成为 <code>Candidate</code>、投票给另一个 <code>Candidate</code>。其他时候不能重置定时器。论文中有一个地方没有写明白：当一个 <code>Leader</code> 收到了一个 RPC reply，并且发现了当前的 term 已经大于自己的 term，需要转变为 Follower，此时需不需要重置定时器？</p>
-</li>
-</ol>
-<h3 id="AppendEntries"><a href="#AppendEntries" class="headerlink" title="AppendEntries"></a>AppendEntries</h3><ol>
-<li><p> 注意 <code>AppendEntriesReply</code> 的处理。Figure 2 对于 RPC request 的处理已经讲的很详细了，按照流程实现即可。但是，论文并没有对 RPC reply 的响应作出什么规定。参考资料建议的是检查当前节点的 Term 的发送请求的 Term 是否是一致的，如果不一致，说明节点在 RPC 的发送前后出现了状态变更，需要直接丢弃。并且，在此之前需要先检查 reply.Term，确保如果 Leader 已经落后则进入 Follower 状态。</p>
-</li>
-<li><p> 不要简单截断 <code>Follower</code> 的 log。处理 <code>Follower</code> 的 log 需要严格按照论文的说明执行。这样做的原因在于：网络是不可靠的，容易出现延迟或者丢包的情况，导致先发送的 RPC 后到达 Follower，发送和接收 RPC 的顺序是不确定的。</p>
-</li>
-</ol>
-<h3 id="调试"><a href="# 调试" class="headerlink" title="调试"></a> 调试 </h3><ol>
-<li> 分布式系统的调试要靠日志。因为分布式系统经常会出现莫名其妙的问题，单步调试基本是行不通的，需要在系统崩溃或者测试失败后观察输出日志，反推系统出故障时的状态，检查是否存在实现上的问题。我个人推荐的做法是把每个对象（Raft 节点、RPC request、RPC response、Timer）内部状态打印出来，然后根据打印的日志推断系统变换。例如，Raft 节点的打印日志可以如下实现：</li>
-</ol>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(rf *Raft)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> fmt.Sprintf (<span class="string">"[% s:% d;Term:% d;VotedFor:% d;Leader:% d;LogLen:% d;CommitIndex:% d;LastApplied:% d;LastIncludedIndex:% d]"</span>,</span><br><span class="line">		rf.state, rf.me, rf.currentTerm, rf.votedFor, rf.leaderId, <span class="built_in">len</span>(rf.log), rf.commitIndex, rf.lastApplied, rf.lastIncludedIndex)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p> 这样做的好处是可以明确是哪个节点出问题了，调试时更有针对性。</p>
-<p> 同时，也可以通过在加锁 / 解锁处添加日志，判断自己的系统是否出现死锁情况（加了锁但是没有解锁）。</p>
-<h3 id="Snapshot- 实现思路"><a href="#Snapshot- 实现思路" class="headerlink" title="Snapshot 实现思路"></a>Snapshot 实现思路 </h3><p>Raft 为了 </p>
-<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>[1] Raft paper (<a href="https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf" target="_blank" rel="noopener">https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf</a>)</p>
-<p>[2] 助教写的 Student Guide (<a href="https://thesquareplanet.com/blog/students-guide-to-raft/" target="_blank" rel="noopener">https://thesquareplanet.com/blog/students-guide-to-raft/</a>)</p>
-<p>[3] Raft structure advice </p>
-<p>[4] Raft lock advice</p>
-<p>[5] Raft 实现细节汇总 </p>
-
-          
+          <p>最近写完了 MIT-6.824 的 Lab，收获非常多。所有 Lab 的内容加在一起是实现一个基于 Raft 的分布式可分片的容错 Key/Value Service，收获非常多，对于编写并发代码以及调试分布式程序有了更深刻的认识。写这几篇文章的目的是为了总结实现过程中的思路以及遇到的问题，如果能够对他人的实现有一点点启发，那就更好了 :）</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/11/28/raft/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -518,6 +510,37 @@
           
 
           
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  5k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  17
+                </span>
+              
+            </div>
+          
 
           
 
@@ -535,210 +558,14 @@
 
       
         
-          
-            <p>本文记录了《Redis 设计与实现》中比较重要的内容。</p>
-<!-- next -->
-<h2 id="数据结构"><a href="# 数据结构" class="headerlink" title="数据结构"></a>数据结构 </h2><h3 id="字典"><a href="# 字典" class="headerlink" title="字典"></a> 字典 </h3><p> 字典在 Redis 中应用广泛。例如，字典键的实现、数据库的底层实现。</p>
-<p>Redis 采用 MurmurHash2 算法计算哈希键值，采用链地址法解决哈希冲突。</p>
-<p>当 Redis 的负载因子达到一定的大小，会采用 rehash 操作。执行 rehash 的时机如下：</p>
-<ul>
-<li>当前数据库没有执行 BGSAVE 或 SAVE 指令，并且负载因子大于 1。</li>
-<li>当前数据库正在执行 BGSAVE 或 SAVE 指令，并且负载因子大于 5。</li>
-</ul>
-<p>这样做的目的是减少写时拷贝过程中内存的修改大小，提升性能。</p>
-<p>由于一次性对大量的键值对（千万级或者亿级）执行 rehash 操作会阻塞当前服务器线程，无法继续执行命令，Redis 采用了渐进式 rehash 方法完成 rehash 操作。具体步骤如下：</p>
-<ul>
-<li>为 <code>ht [1]</code> 分配空间，让字典同时拥有 <code>ht [0]</code> 和 <code>ht [1]</code>。</li>
-<li>初始化索引计数器 rehashidx 为 0，表示 rehash 正式开始。</li>
-<li>每当执行查找、插入、删除操作时，顺带对 <code>ht [0][rehashidx]</code> 的所有元素执行 rehash 操作到 <code>ht [1]</code> 中，完成后，rehashidx++。</li>
-<li>当所有的键值对迁移完毕后，回收 <code>ht [0]</code> 的内存空间，把 <code>ht [1]</code> 变为 <code>ht [0]</code>，同时新建一个 <code>ht [1]</code> 用于下一次的 rehash 过程。</li>
-</ul>
-<h3 id="跳跃表"><a href="# 跳跃表" class="headerlink" title="跳跃表"></a>跳跃表 </h3><p> 跳跃表是一种有序的数据结构，性能和平衡树相差不大，并且实现简单。</p>
-<p>Redis 使用 <code>zskiplistNode</code> 结构表示一个跳跃表节点，有以下几个成员：</p>
-<ul>
-<li>层：层高是一个 1-32 的随机数。包含前进指针和跨度两个属性。前进指针指向当前层的下一个节点，跨度记录了两者之间的距离，用于计算目标节点排位。</li>
-<li>后退指针：用于表尾到表头的遍历。</li>
-<li>分值：每个节点按照分值由小到大排序。如果分值相同，按照对象大小排序。</li>
-<li>成员：一个字符串对象。</li>
-</ul>
-<h3 id="整数集合"><a href="# 整数集合" class="headerlink" title="整数集合"></a>整数集合 </h3><p> 当 SET 内容不多，并且都是整数时，Redis 使用整数集合作为底层实现。</p>
-<p>整数集合的元素类型包括 <code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。整数集合不支持降级操作。</p>
-<h3 id="压缩链表"><a href="# 压缩链表" class="headerlink" title="压缩链表"></a>压缩链表 </h3><p> 压缩列表是哈希键和集合键的底层实现之一，当数据量不大，并且列表键的列表项或者哈希键的键值是整型或者短字符串，就会使用压缩链表作为底层实现。</p>
-<p>压缩链表的节点有以下几个字段构成：previous_entry_length、encoding、content。</p>
-<ul>
-<li>previous_entry_length：前一个字段的长度。如果小于 254 字节，那么这个字段只有一个字节；否则，该字段有五个字节，第一个字节的内容是 254，后面的字节存储长度。</li>
-<li>encoding：内容的编码方式。</li>
-<li>content：具体内容。</li>
-</ul>
-<p>压缩链表存在的问题是连锁更新：插入新的内容导致前面 entry 的长度变化，会导致后面的 entry 需要更多的内存保存 previous_entry_length，造成后续字段长度都发生了变化。这样会造成内存的多次重新分配。</p>
-<h3 id="对象"><a href="# 对象" class="headerlink" title="对象"></a>对象</h3><p>Redis 一共有五种对象，分别为：字符串对象、列表对象、哈希对象、集合对象、有序集合对象。每种对象在不同的使用场景下有不同的底层编码方式，可以优化使用效率。</p>
-<img src="/2020/09/09/redis-notes/image-20200909235912232.png" class="">
-
-<p>STRING 对象编码方式分为三种：int、embstr 和 raw。embstr 针对短字符串进行了优化，减少了内存分配和释放的次数，并且由于采用连续存储的方式，提升了缓存的命中率。</p>
-<p>LIST 对象编码方式分为两种：ziplist 和 linkedlist。当所有项的大小小于 64 字节，并且列表长度小于 512，使用 ziplist 编码。</p>
-<p>HASH 对象编码方式有两种：ziplist 和 hashtable。当键值对的所有键和值的大小小于 64 字节，并且对象长度小于 512，使用 ziplist 编码方式。</p>
-<img src="/2020/09/09/redis-notes/graphviz-e39cf16d63d6cdb8a267a0990b10cb54c8bffe20.png" class="">
-
-<p>SET 对象编码方式有两种：intset 和 hashtable。当所有的值都是整数，并且对象长度小于 512，使用 intset 作为底层编码方式。</p>
-<img src="/2020/09/09/redis-notes/graphviz-067f30b81066463cca9b46f4db8adb08b137da6e.png" class="">
-
-<p>ZSET 对象编码方式有两种：ziplist 和 skiplist。当所有元素的长度都小于 64 字节，同时长度小于 128 时，使用 ziplist 作为底层编码方式。</p>
-<img src="/2020/09/09/redis-notes/graphviz-966f2bfe64e82f8f1da199e3651fdeea42a1c3b6.png" class="">
-
-<blockquote>
-<p>skilplist 编码方式同时使用了哈希表和跳跃表，兼顾了精确查找和范围查找的效率。</p>
-</blockquote>
-<p>Redis 通过引用计数的方式实现内存的自动回收。同时，通过引用计数也可以实现对象的复用。</p>
-<h2 id="单机数据库"><a href="# 单机数据库" class="headerlink" title="单机数据库"></a>单机数据库 </h2><h3 id="键过期删除策略"><a href="# 键过期删除策略" class="headerlink" title="键过期删除策略"></a> 键过期删除策略</h3><p>Redis 把所有键的过期时间添加到一个过期字典中，检查过期字典就可以判断一个键是否过期。</p>
-<p>过期删除策略分为三种：定时删除、惰性删除、定期删除。</p>
-<ul>
-<li>定时删除创建一个定时器，当定时器过期时，立刻删除数据键。这种策略对内存最为友好，但是会对 CPU 造成更多的负担。</li>
-<li>惰性删除每次访问键时检查键是否过期，如果过期就删除这个键。这种策略对 CPU 最为友好，但是会造成内存的浪费。</li>
-<li>定期删除结合了二者的优点。</li>
-</ul>
-<p>Redis 采用惰性删除和定期删除两种过期删除策略。</p>
-<h3 id="RDB- 持久化"><a href="#RDB- 持久化" class="headerlink" title="RDB 持久化"></a>RDB 持久化</h3><p>RDB 持久化通过保存当前 Redis 数据库状态实现持久化。RDB 有两种命令可以实现持久化操作：SAVE 和 BGSAVE。</p>
-<ul>
-<li>SAVE 操作阻塞当前进程，直到持久化操作完成，服务器不会执行新的命令。</li>
-<li>BGSAVE 操作创建一个子进程执行持久化操作，在这个期间，服务器依旧可以执客户端发送的命令。</li>
-</ul>
-<p>写入 RDB 文件的过程中，服务器会检查每个键是否是过期的，知写入没有过期的键。在载入 RDB 文件的过程中，如果服务器是在主模式下运行，那么会检查键是否过期；否则会把 RDB 文件全部载入。</p>
-<p>可以对数据库设置 RDB 文件的自动保存条件。Redis 通过 dirty 计数器保存上一次执行 RDB 操作后数据库的修改次数，通过 lastsave 时间戳记录距离上一次 RDB 操作的事件。每 100ms 就会检查这两个值，如果达到了自动保存条件就会执行 RDB 持久化操作。</p>
-<p>RDB 文件结构如下</p>
-<img src="/2020/09/09/redis-notes/graphviz-b0b05fb491bff29077e3cf7afca171fc7777de7a.png" class="">
-
-<p>每个数据库结构如下</p>
-<img src="/2020/09/09/redis-notes/graphviz-ed7f323651c08db48eb84cb21e4a609d0777e121.png" class="">
-
-<p>不带过期时间的键值对结构如下</p>
-<img src="/2020/09/09/redis-notes/graphviz-e2077e76096c95111bdb16207691c0ef8286fd4c.png" class="">
-
-<p>带过期时间的键值对结构如下</p>
-<img src="/2020/09/09/redis-notes/graphviz-23af1c5c65bc0be2a8d6ca776761bf10657561c0.png" class="">
-
-<h3 id="AOF- 持久化"><a href="#AOF- 持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h3><p>AOF 持久化通过保存 Redis 服务器的写命令实现保存数据库的状态。</p>
-<p>为防止 AOF 文件过大，服务器定期执行 AOF 重写操作，使用更少的指令达到相同的数据库状态，减少冗余。</p>
-<p>可以通过设置 appendfsync 选项的值控制 AOF 文件的刷新行为。</p>
-<table>
-<thead>
-<tr>
-<th align="center">appendfsync 选项的值</th>
-<th align="center">AOF 刷新行为</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">always</td>
-<td align="center">将 aof_buf 缓冲区的所有内容写入，并同步到 AOF 文件中。</td>
-</tr>
-<tr>
-<td align="center">everysec</td>
-<td align="center">将 aof_buf 缓冲区的所有内容写入到 AOF 文件中，如果距离上次同步 AOF 文件的时间超过一秒，那么再次对 AOF 文件进行同步，并且同步过程由专门的进程负责。</td>
-</tr>
-<tr>
-<td align="center">no</td>
-<td align="center">将 aof_buf 缓冲区的所有内容写入，不对 AOF 文件同步，具体的同步时间由操作系统决定。</td>
-</tr>
-</tbody></table>
-<p>appendfsync 选项的值直接决定了 AOF 持久化功能的效率和安全性。</p>
-<p>在重写的过程中，服务器可能会接收到新的写命令，造成 AOF 文件状态与当前数据库状态的不一致。为了解决这个问题，Redis 设置了一个 AOF 缓冲区。在 AOF 重写过程中，服务器将接收到的写命令保存到缓冲区中。当子进程的 AOF 重写操作完成后，把缓冲区的内容写入到新的 AOF 文件中。</p>
-<h3 id="事件"><a href="# 事件" class="headerlink" title="事件"></a>事件</h3><p>Redis 是一个事件驱动程序，事件类型分为文件事件和时间事件。</p>
-<p>文件事件处理器基于 Reactor 模式开发，通过包装 I/O 多路复用函数实现。有两种类型的事件：</p>
-<ul>
-<li>可读事件：客户端执行 write 操作、客户端执行 close 操作、客户端执行 connect 操作；</li>
-<li>可写事件：客户端执行 read 操作。</li>
-</ul>
-<p>时间事件有以下两种类型：</p>
-<ul>
-<li>定时事件：让一段程序在指定的时间后执行一次；</li>
-<li>周期性事件：让一段程序每隔一段时间执行一次。</li>
-</ul>
-<p>所有时间事件存储在一个无序链表中，执行时遍历整个链表，处理所有已到达的时间事件。</p>
-<ul>
-<li>原因：Redis 服务器只有一个周期性事件，使用链表不会影响性能。</li>
-</ul>
-<h3 id="客户端"><a href="# 客户端" class="headerlink" title="客户端"></a>客户端</h3><p>Redis 使用一个链表保存所有建立连接的客户端，客户端结构体保存了客户端相关的属性。</p>
-<p>输入缓冲区保存客户端输入的命令。这个缓冲区是可以动态扩展的，但是最大大小不能超过 1GB。</p>
-<p>输出缓冲区保存服务端的响应，由固定大小缓冲区和可变大小缓冲区组成。</p>
-<h3 id="服务器"><a href="# 服务器" class="headerlink" title="服务器"></a>服务器 </h3><p> 服务器接收到客户端发送的命令后，执行以下几个步骤：</p>
-<ul>
-<li>读取命令请求，缓存在客户端结构体中；</li>
-<li>执行命令，包含了以下四步：（1）查找命令实现；（2）执行预备工作；（3）调用命令的执行函数；（4）执行后续工作。</li>
-<li>将命令回复发送给客户端。</li>
-</ul>
-<p>服务器每 100 毫秒执行一次 <code>serverCron</code> 函数。该函数主要的工作包括：更新服务器缓存、更新 LRU 时钟、检查持久化条件、执行被延迟的 BGREWRITEAOF 操作。</p>
-<h2 id="多机数据库"><a href="# 多机数据库" class="headerlink" title="多机数据库"></a>多机数据库 </h2><h3 id="复制"><a href="# 复制" class="headerlink" title="复制"></a> 复制 </h3><p> 复制分为两个步骤：同步和命令传播。</p>
-<ul>
-<li>命令传播：主服务器会将写命令发送给从服务器。</li>
-<li>同步：同步分为完全重同步和部分重同步：<ul>
-<li>完全重同步：适用于首次进行主从同步的情况。主服务器执行 BGSAVE 生成 RDB 文件，同时记录所有的写命令。把这些内容发送给从服务器，即可完成同步。</li>
-<li>部分重同步：用于断线重连后主从复制，如果条件允许，主服务器将在连接断开后接收到的写命令发送给从服务器，从而解决了断线重连后完全重同步的低效问题。</li>
-</ul>
-</li>
-</ul>
-<p>部分重同步的实现依赖于三个机制：复制偏移量、复制积压缓冲区、服务器的运行 id。</p>
-<ul>
-<li>复制偏移量用于确定主从服务器之间是否处于一致状态。如果主从服务器的复制偏移量相同，那么他们就处于一致状态；反之，他们就处于不一致状态。</li>
-<li>复制积压缓冲区保存主服务器在命令传输阶段发送的写命令。当从服务器发送 PSYNC 命令时，如果复制积压缓冲区的内容包含所有缺失的数据，那么执行部分重同步操作；反之，执行完全重同步操作。</li>
-<li>服务器的运行 id 用于确定从服务器复制的主服务器。当从服务保存的运行 id 和主服务器的运行 id 相同，那么主服务器可以尝试执行部分重同步操作；反之，主服务器需要使用完全重同步操作。</li>
-</ul>
-<p>从服务器通过心跳机制检测检查网络连接状态以及检测命令丢失情况。</p>
-<h3 id="Sentinel（哨兵机制）"><a href="#Sentinel（哨兵机制）" class="headerlink" title="Sentinel（哨兵机制）"></a>Sentinel（哨兵机制）</h3><p>由一个或者多个 Sentinel 实例组成的 Sentinel 系统可以监视任意多个主服务器，以及这些服务器下属的从服务器。如果被监视的主服务器下线，Sentinel 系统可以从下属的从服务器中选出一个服务器作为新的主服务器。Sentinel 保证了 Redis 系统的 ** 高可用性 **。</p>
-<p>Sentinel 和每个服务器（主服务器和从服务器）建立了一条命令连接和一条订阅连接。完成后，Sentinel 每 10 秒发送一次 INFO 命令获取主服务器的当前信息，用于更新主服务器实例。在这个过程中，如果 Sentinel 系统发现了新的从服务器，会和这个从服务器之间建立一条命令连接和一条订阅连接，用于更新从服务器实例。</p>
-<p>Sentinel 每 2 秒一次向主服务器和从服务器发送频道信息，并通过订阅连接接收频道消息，用于更新其他监视该服务器的 Sentinel 信息。当 Sentinel 发现了新的 Sentinel 后，会更新 <code>sentinels</code> 字典，并和该 Sentinel 建立一条命令连接（没有订阅连接）。</p>
-<p>Sentinel 每 1 秒发送一次 PING 指令，持续回复无效命令超过一个固定的时间，Sentinel 判断主服务器已经下线（主观下线）。随后 Sentinel 会询问其他的 Sentinel 该服务器是否下线，如果足够多的 Sentinel 判断服务器已经处于主观下线状态，该服务器进入客观下线状态。</p>
-<p>当一个主服务器处于客观下线状态后，监视该主服务器的 Sentinel 需要选举出一个领头 Sentinel，执行故障转移操作。选举流程采用 Raft 算法的一个实现，具体流程如下：</p>
-<ul>
-<li><p>所有的 Sentinel 都有被选举为领头 Sentinel 的资格。</p>
-</li>
-<li><p>每个发现自己监听的主服务器处于客观下线状态的 Sentinel 都会要求其他的 Sentinel 设置自己为局部领头 Sentinel。</p>
-</li>
-<li><p>最先向目标 Sentinel 发送设置要求的源 Sentinel 会被设置为目标 Sentinel 的局部领头 Sentinel，其他的设置要求都会被忽略。（即先到先得）</p>
-</li>
-<li><p>如果某个 Sentinel 被半数以上的 Sentinel 选举为局部领头 Sentinel，这个 Sentinel 将成为领头 Sentinel。</p>
-</li>
-<li><p>如果在规定时间内没有选出领头 Sentinel，那么过一段时间后再次进行选举，直到选出领头 Sentinel 为止。</p>
-</li>
-<li><p>领头 Sentinel 负责故障转移操作，包括确定新的主服务器、修改从服务器的复制目标、将下线的主服务器设置为新主服务器的从服务器。</p>
-</li>
-</ul>
-<p>选举新主服务器步骤如下：</p>
-<ul>
-<li>删除已经下线的从服务器（保证从服务器都是在线的）。</li>
-<li>删除最近 5 秒内没有回复过领头 Sentinel 的 INFO 命令的从服务器（保证从服务器的网络状态良好）。</li>
-<li>删除和主服务器断开连接超过 down-after-milliseconds*10 的从服务器（保证从服务器的数据内容都是尽可能新的）。</li>
-<li>之后，领头 Sentinel 根据服务器的优先级排序，选出优先级最大的从服务器。如果有多个最高优先级的从服务器，选择复制偏移量最大的从服务器。如果有多个优先级最高、复制偏移量最大的从服务器，选择 ID 最小的从服务器。</li>
-</ul>
-<h3 id="集群"><a href="# 集群" class="headerlink" title="集群"></a>集群 </h3><p> 节点通过 CLUSTER MEET 命令连接。当节点 A 和节点 B 完成握手后，节点 A 通过 Gossip 协议扩散给所在集群的其他节点，告知节点 B 已经加入到集群中了。</p>
-<blockquote>
-<p>Gossip 协议的执行过程如下：Gossip 过程是由种子节点发起，当一个种子节点有状态需要更新到网络中的其他节点时，它会随机的选择周围几个节点散播消息，收到消息的节点也会重复该过程，直至最终网络中所有的节点都收到了消息。这个过程可能需要一定的时间，由于不能保证某个时刻所有节点都收到消息，但是理论上最终所有节点都会收到消息，因此它是一个最终一致性协议。</p>
-</blockquote>
-<p>Redis 集群采用分片的方式保存键值对，数据库总共分为 16384 个槽，每个 key 都属于其中一个槽，每个服务器可以同时处理 0-16384 个槽中的键。</p>
-<p>每个槽的指派信息记录在一个 bitmap 中，同时记录了集群中所有槽指派信息。在集群中，每个节点通过消息传播的方式，告知集群内其他的节点自己负责的槽。</p>
-<p>当客户端向集群内的任意节点发送和键相关的命令时，节点需要计算出键属于哪个槽，并且判断这个槽是否由自己负责的。如果不是自己负责的，需要给客户端发送一个 MOVE 错误。客户端接收到这个消息后，将会被重定向到正确的节点，然后再次发送相同的命令。</p>
-<img src="/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png" class="">
-
-<blockquote>
-<p>Redis 使用 CRC-16 校验和确定每个数据键属于哪个槽。</p>
-</blockquote>
-<p>Redis 集群提供了重新分片的功能。重新分片指的是将任意数量的指派给某个节点（源节点）的槽划分给另一个节点（目标节点），Redis 使用管理软件 <code>redis-trib</code> 执行。重新分片操作可以在线进行，集群不需要下线。在操作过程中，如果客户端向源节点发送数据键相关的命令，并且数据键属于正在被迁移的槽，那么源节点首先在自己的数据库查找键，如果不存在，向客户端发送一个 ASK 错误。客户端接收到这个错误后，将会重定向到目标节点，并且重新执行数据键相关的命令。</p>
-<img src="/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png" class="">
-
-<p>MOVE 错误和 ASK 错误的区别如下：</p>
-<ul>
-<li>MOVE 命令的效果是永久性的。</li>
-<li>ASK 命令的效果是临时性的。</li>
-</ul>
-<p>集群内每个节点通过发送 PING 消息确定集群内的节点是否在线。如果接收了 PING 消息的节点没有在规定时间内返回 PONG 消息，那么发送 PING 消息的节点会把接收 PING 消息的节点标记为 ** 疑似下线 ** 状态。如果有半数以上的主节点认为某个主节点处于疑似下线状态，那么该节点会被标记为已下线，并通过消息广播的形式通知集群内所有的节点。</p>
-<p>当 Redis 集群中的主节点下线后，需要选出一个从节点成为新的主节点。选举的过程和 Sentinel 选举领头节点的过程类似，也是 Raft 算法的实现。选举过程如下：</p>
-<ul>
-<li>当从节点发现自己的主节点已下线，它会要求所有具有投票权的主节点给自己投票。</li>
-<li>主节点会把接收到的第一个从节点设置为新的主节点。</li>
-<li>如果一个从节点获得 n/2+1 个主节点的投票支持，那么就会成为新的主节点。</li>
-</ul>
-<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>[1]《Redis 设计与实现》</p>
-<p>[2] <a href="https://zhuanlan.zhihu.com/p/41228196" target="_blank" rel="noopener">P2P 网络核心技术：Gossip 协议</a></p>
-
-          
+          <p>本文记录了《Redis 设计与实现》中比较重要的内容。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/09/09/redis-notes/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -837,6 +664,37 @@
 
           
 
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  407
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  1
+                </span>
+              
+            </div>
           
 
           
@@ -1020,6 +878,37 @@
 
           
 
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1.7k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  6
+                </span>
+              
+            </div>
           
 
           
@@ -1266,6 +1155,15 @@
   <span class="author" itemprop="copyrightHolder">williamgrt</span>
 
   
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">8.6k</span>
+  
 </div>
 
 
@@ -1297,6 +1195,8 @@
     
       <div class="back-to-top">
         <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
         
       </div>
     
