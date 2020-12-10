@@ -381,7 +381,7 @@
 
       
         
-          <p>最近写完了 MIT-6.824 的 Lab，收获非常多。所有 Lab 的内容加在一起是实现一个基于 Raft 的分布式可分片的容错 Key/Value Service，收获非常多，对于编写并发代码以及调试分布式程序有了更深刻的认识。写这几篇文章的目的是为了总结实现过程中的思路以及遇到的问题，如果能够对他人的实现有一点点启发，那就更好了 :）</p>
+          <p>最近写完了MIT-6.824的Lab，收获非常多。所有Lab的内容加在一起是实现一个基于Raft的分布式可分片的容错Key/Value Service，收获非常多，对于编写并发代码以及调试分布式程序有了更深刻的认识。写这几篇文章的目的是为了总结实现过程中的思路以及遇到的问题，如果能够对他人的实现有一点点启发，那就更好了 :）</p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2020/11/28/raft/#more" rel="contents">
@@ -558,7 +558,7 @@
 
       
         
-          <p>本文记录了《Redis 设计与实现》中比较重要的内容。</p>
+          <p>本文记录了《Redis设计与实现》中比较重要的内容。</p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2020/09/09/redis-notes/#more" rel="contents">
@@ -675,7 +675,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  407
+                  429
                 </span>
               
 
@@ -713,73 +713,14 @@
 
       
         
-          
-            <h2 id="一面（约 -15min）"><a href="# 一面（约 -15min）" class="headerlink" title="一面（约 15min）"></a> 一面（约 15min）</h2><ol>
-<li><p> 写题 </p>
-<blockquote>
-<p> 输入两个集合 A ，B ，均是由 IP 地址或者连续 IP 地址段组成。其中集合本身 IP 地址段之间是没有交集的，两个集群之间可能有交集。设计合适的数据结构和接口来实现输出 A ，B 两个集合的交集和并集，设计数据结构和对应的 API 实现完成需求，要求占用资源占用最好。</p>
-</blockquote>
-<ul>
-<li> 位图 </li>
-<li> 数组表示区间的头尾，排序后使用二分查找。</li>
-</ul>
-</li>
-<li><p> 项目相关 </p>
-<ul>
-<li><p> 项目流程 </p>
-</li>
-<li><p> 项目使用了什么多线程同步手段 </p>
-</li>
-<li><p> 自旋锁和互斥锁的区别 </p>
-</li>
-</ul>
-</li>
-<li><p>APUE 学过没？权限管理是什么？</p>
-</li>
-</ol>
-<h2 id="二面（约 -30min）"><a href="# 二面（约 -30min）" class="headerlink" title="二面（约 30min）"></a> 二面（约 30min）</h2><p> 一开始耳机有问题，面试官听不到我的声音…</p>
-<ol>
-<li><p> 自我介绍 </p>
-</li>
-<li><p> 项目相关 </p>
-<ul>
-<li> 项目中遇到了什么困难（并发控制）</li>
-<li> 使用了什么并发控制手段 </li>
-<li> 条件变量的使用 </li>
-<li>socket 如何指定使用的网络协议 </li>
-<li> 如何处理大量的连接（I/O 多路复用）</li>
-<li>select 和 epoll 的区别 </li>
-<li> 还做了什么项目 </li>
-<li> 讲一下数据库比赛的项目 </li>
-<li> 项目中遇到了什么困难 </li>
-</ul>
-</li>
-<li><p> 写题 </p>
-<blockquote>
-<p> 手撕插入排序 </p>
-</blockquote>
-<ul>
-<li> 优化（二分查找？）</li>
-<li> 检查代码是否有问题（没问题？）</li>
-</ul>
-</li>
-<li><p> 现在在看什么书，为什么看这本？</p>
-</li>
-<li><p> 反问 </p>
-</li>
-</ol>
-<h2 id="hr- 面（约 -15min）"><a href="#hr- 面（约 -15min）" class="headerlink" title="hr 面（约 15min）"></a>hr 面（约 15min）</h2><ol>
-<li> 自我介绍 </li>
-<li> 为什么选择计算机专业 </li>
-<li> 为什么选择这个岗位 </li>
-<li> 学校社团相关经历 </li>
-<li> 经历的最困难的事情是什么 </li>
-<li> 父母对自己的影响 </li>
-<li> 平时是怎么自学的 </li>
-<li> 反问 </li>
-</ol>
-
-          
+          <p>深信服星耀计划C/C++开发（网络安全方向）实习生面经</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/09/06/sangfor/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -928,7 +869,7 @@
       
         
           
-            <h2 id="为什么需要 -I-O- 多路复用"><a href="# 为什么需要 -I-O- 多路复用" class="headerlink" title="为什么需要 I/O 多路复用"></a>为什么需要 I/O 多路复用 </h2><p> 大部分应用都可以使用阻塞 I/O 模型就足够完成任务了。但是，有些应用需要满足以下的条件：</p>
+            <h2 id="为什么需要 I-O 多路复用"><a href="# 为什么需要 I-O 多路复用" class="headerlink" title="为什么需要 I/O 多路复用"></a>为什么需要 I/O 多路复用 </h2><p> 大部分应用都可以使用阻塞 I/O 模型就足够完成任务了。但是，有些应用需要满足以下的条件：</p>
 <ul>
 <li>使用非阻塞的方式检查文件描述符是否可以执行 I/O 操作。</li>
 <li>可以同时检查多个文件描述符。</li>
@@ -940,7 +881,7 @@
 <li>多线程的方法虽然会占用较少的资源，但是正确地编写线程间通信代码是一项非常复杂的工作。</li>
 </ul>
 <p>我们可以使用 I/O 多路复用技术解决上面提到的问题。</p>
-<h2 id="什么是 -I-O- 多路复用"><a href="# 什么是 -I-O- 多路复用" class="headerlink" title="什么是 I/O 多路复用"></a>什么是 I/O 多路复用</h2><p>I/O 多路复用允许同时监听多个文件描述符，找出任意一个文件描述符是否可以执行 I/O 操作。</p>
+<h2 id="什么是 I-O 多路复用"><a href="# 什么是 I-O 多路复用" class="headerlink" title="什么是 I/O 多路复用"></a>什么是 I/O 多路复用</h2><p>I/O 多路复用允许同时监听多个文件描述符，找出任意一个文件描述符是否可以执行 I/O 操作。</p>
 <blockquote>
 <p>I/O 多路本质上是一种同步操作。因为真正的 I/O 操作仍然是阻塞的。</p>
 </blockquote>
@@ -970,8 +911,8 @@
 </ul>
 <h3 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">poll</span> <span class="params">(struct pollfd *fds, <span class="keyword">unsigned</span> <span class="keyword">int</span> nfds, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
 
-<p>poll 的功能和 select 类似，不过 poll** 并没有设置被检查文件描述符的最大值 **。</p>
-<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll 是 Linux 2.6 版本中提供的新的 API，是 select 和 poll 的升级版。epoll 使用 ** 一个文件描述符同时监听多个描述符 **。每当注册新的描述符时，epoll 都会把它拷贝到一个内核数据结构中，可以避免每次监听时都要把所有监听文件描述符拷贝到内核中的时间开销。</p>
+<p>poll 的功能和 select 类似，不过 poll<strong>并没有设置被检查文件描述符的最大值</strong>。</p>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll 是 Linux 2.6 版本中提供的新的 API，是 select 和 poll 的升级版。epoll 使用 <strong> 一个文件描述符同时监听多个描述符</strong>。每当注册新的描述符时，epoll 都会把它拷贝到一个内核数据结构中，可以避免每次监听时都要把所有监听文件描述符拷贝到内核中的时间开销。</p>
 <p>epoll 提供了三个方法：epoll_create、epoll_ctl、epoll_wait。</p>
 <p>epoll_create 创建一个 epoll 句柄。size 表示 epoll 支持的最大描述符个数，但是这个参数在某些 Linux 实现中已经没有意义。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> <span class="built_in">size</span>)</span></span>;</span><br></pre></td></tr></table></figure>
@@ -995,7 +936,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
 
 <p>和 select/poll 不同，epoll 采用类似于事件回调的方式获取已经发生的事件信息。当注册一个文件描述符（调用 epoll_ctl 时），内核将相应的设备和文件描述符建立回调关系，一旦事件就绪，内核就会调用相应的回调方法，epoll_wait 就可以收到通知，然后处理所有已经就绪的时间。</p>
-<h2 id="对比"><a href="# 对比" class="headerlink" title="对比"></a>对比</h2><h3 id="epoll- 的优势"><a href="#epoll- 的优势" class="headerlink" title="epoll 的优势"></a>epoll 的优势</h3><ul>
+<h2 id="对比"><a href="# 对比" class="headerlink" title="对比"></a>对比</h2><h3 id="epoll 的优势"><a href="#epoll 的优势" class="headerlink" title="epoll 的优势"></a>epoll 的优势</h3><ul>
 <li>没有监听文件描述符数量的限制；</li>
 <li>只有当注册需要监听的文件描述符时，才会把 fd 拷贝到内核中。在调用 epoll_wait 时不会重复拷贝 fd。</li>
 <li>采用类似于事件回调的机制，不需要内核依次检查每个文件描述符相应事件是否就绪。当一个事件就绪时，注册的回调函数会将事件添加到就绪列表中，内核不需要一个一个检查文件描述符上的时间是否就绪。因此，epoll 性能不会随着监听 fd 数量的上升而下降。</li>
@@ -1006,7 +947,7 @@
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
 <li>《Linux/Unix 系统编程手册》</li>
 <li><a href="http://gityuan.com/2015/12/06/linux_epoll/" target="_blank" rel="noopener">select/poll/epoll 对比分析</a></li>
-<li>[有关 I/O 多路复用的总结](<a href="https://ivanlu1024.github.io/2019/05/24/IO" target="_blank" rel="noopener">https://ivanlu1024.github.io/2019/05/24/IO</a> 多路复用总结 /)</li>
+<li><a href="https://ivanlu1024.github.io/2019/05/24/IO 多路复用总结 /" target="_blank" rel="noopener">有关 I/O 多路复用的总结</a></li>
 </ul>
 
           

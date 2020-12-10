@@ -361,7 +361,7 @@
       
 
       
-        <h2 id="为什么需要 -I-O- 多路复用"><a href="# 为什么需要 -I-O- 多路复用" class="headerlink" title="为什么需要 I/O 多路复用"></a>为什么需要 I/O 多路复用 </h2><p> 大部分应用都可以使用阻塞 I/O 模型就足够完成任务了。但是，有些应用需要满足以下的条件：</p>
+        <h2 id="为什么需要 I-O 多路复用"><a href="# 为什么需要 I-O 多路复用" class="headerlink" title="为什么需要 I/O 多路复用"></a>为什么需要 I/O 多路复用 </h2><p> 大部分应用都可以使用阻塞 I/O 模型就足够完成任务了。但是，有些应用需要满足以下的条件：</p>
 <ul>
 <li>使用非阻塞的方式检查文件描述符是否可以执行 I/O 操作。</li>
 <li>可以同时检查多个文件描述符。</li>
@@ -373,7 +373,7 @@
 <li>多线程的方法虽然会占用较少的资源，但是正确地编写线程间通信代码是一项非常复杂的工作。</li>
 </ul>
 <p>我们可以使用 I/O 多路复用技术解决上面提到的问题。</p>
-<h2 id="什么是 -I-O- 多路复用"><a href="# 什么是 -I-O- 多路复用" class="headerlink" title="什么是 I/O 多路复用"></a>什么是 I/O 多路复用</h2><p>I/O 多路复用允许同时监听多个文件描述符，找出任意一个文件描述符是否可以执行 I/O 操作。</p>
+<h2 id="什么是 I-O 多路复用"><a href="# 什么是 I-O 多路复用" class="headerlink" title="什么是 I/O 多路复用"></a>什么是 I/O 多路复用</h2><p>I/O 多路复用允许同时监听多个文件描述符，找出任意一个文件描述符是否可以执行 I/O 操作。</p>
 <blockquote>
 <p>I/O 多路本质上是一种同步操作。因为真正的 I/O 操作仍然是阻塞的。</p>
 </blockquote>
@@ -403,8 +403,8 @@
 </ul>
 <h3 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">poll</span> <span class="params">(struct pollfd *fds, <span class="keyword">unsigned</span> <span class="keyword">int</span> nfds, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
 
-<p>poll 的功能和 select 类似，不过 poll** 并没有设置被检查文件描述符的最大值 **。</p>
-<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll 是 Linux 2.6 版本中提供的新的 API，是 select 和 poll 的升级版。epoll 使用 ** 一个文件描述符同时监听多个描述符 **。每当注册新的描述符时，epoll 都会把它拷贝到一个内核数据结构中，可以避免每次监听时都要把所有监听文件描述符拷贝到内核中的时间开销。</p>
+<p>poll 的功能和 select 类似，不过 poll<strong>并没有设置被检查文件描述符的最大值</strong>。</p>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll 是 Linux 2.6 版本中提供的新的 API，是 select 和 poll 的升级版。epoll 使用 <strong> 一个文件描述符同时监听多个描述符</strong>。每当注册新的描述符时，epoll 都会把它拷贝到一个内核数据结构中，可以避免每次监听时都要把所有监听文件描述符拷贝到内核中的时间开销。</p>
 <p>epoll 提供了三个方法：epoll_create、epoll_ctl、epoll_wait。</p>
 <p>epoll_create 创建一个 epoll 句柄。size 表示 epoll 支持的最大描述符个数，但是这个参数在某些 Linux 实现中已经没有意义。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> <span class="built_in">size</span>)</span></span>;</span><br></pre></td></tr></table></figure>
@@ -428,7 +428,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event * events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
 
 <p>和 select/poll 不同，epoll 采用类似于事件回调的方式获取已经发生的事件信息。当注册一个文件描述符（调用 epoll_ctl 时），内核将相应的设备和文件描述符建立回调关系，一旦事件就绪，内核就会调用相应的回调方法，epoll_wait 就可以收到通知，然后处理所有已经就绪的时间。</p>
-<h2 id="对比"><a href="# 对比" class="headerlink" title="对比"></a>对比</h2><h3 id="epoll- 的优势"><a href="#epoll- 的优势" class="headerlink" title="epoll 的优势"></a>epoll 的优势</h3><ul>
+<h2 id="对比"><a href="# 对比" class="headerlink" title="对比"></a>对比</h2><h3 id="epoll 的优势"><a href="#epoll 的优势" class="headerlink" title="epoll 的优势"></a>epoll 的优势</h3><ul>
 <li>没有监听文件描述符数量的限制；</li>
 <li>只有当注册需要监听的文件描述符时，才会把 fd 拷贝到内核中。在调用 epoll_wait 时不会重复拷贝 fd。</li>
 <li>采用类似于事件回调的机制，不需要内核依次检查每个文件描述符相应事件是否就绪。当一个事件就绪时，注册的回调函数会将事件添加到就绪列表中，内核不需要一个一个检查文件描述符上的时间是否就绪。因此，epoll 性能不会随着监听 fd 数量的上升而下降。</li>
@@ -439,7 +439,7 @@
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
 <li>《Linux/Unix 系统编程手册》</li>
 <li><a href="http://gityuan.com/2015/12/06/linux_epoll/" target="_blank" rel="noopener">select/poll/epoll 对比分析</a></li>
-<li>[有关 I/O 多路复用的总结](<a href="https://ivanlu1024.github.io/2019/05/24/IO" target="_blank" rel="noopener">https://ivanlu1024.github.io/2019/05/24/IO</a> 多路复用总结 /)</li>
+<li><a href="https://ivanlu1024.github.io/2019/05/24/IO 多路复用总结 /" target="_blank" rel="noopener">有关 I/O 多路复用的总结</a></li>
 </ul>
 
       
@@ -631,7 +631,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要 -I-O- 多路复用"><span class="nav-number">1.</span> <span class="nav-text">为什么需要 I&#x2F;O 多路复用 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是 -I-O- 多路复用"><span class="nav-number">2.</span> <span class="nav-text">什么是 I&#x2F;O 多路复用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#APIs-select-poll-epoll"><span class="nav-number">3.</span> <span class="nav-text">APIs: select&#x2F;poll&#x2F;epoll</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#select"><span class="nav-number">3.1.</span> <span class="nav-text">select</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#poll"><span class="nav-number">3.2.</span> <span class="nav-text">poll</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll"><span class="nav-number">3.3.</span> <span class="nav-text">epoll</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对比"><span class="nav-number">4.</span> <span class="nav-text">对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll- 的优势"><span class="nav-number">4.1.</span> <span class="nav-text">epoll 的优势</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">4.2.</span> <span class="nav-text">使用场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要 I-O 多路复用"><span class="nav-number">1.</span> <span class="nav-text">为什么需要 I&#x2F;O 多路复用 </span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是 I-O 多路复用"><span class="nav-number">2.</span> <span class="nav-text">什么是 I&#x2F;O 多路复用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#APIs-select-poll-epoll"><span class="nav-number">3.</span> <span class="nav-text">APIs: select&#x2F;poll&#x2F;epoll</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#select"><span class="nav-number">3.1.</span> <span class="nav-text">select</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#poll"><span class="nav-number">3.2.</span> <span class="nav-text">poll</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll"><span class="nav-number">3.3.</span> <span class="nav-text">epoll</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对比"><span class="nav-number">4.</span> <span class="nav-text">对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll 的优势"><span class="nav-number">4.1.</span> <span class="nav-text">epoll 的优势</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">4.2.</span> <span class="nav-text">使用场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>
