@@ -96,7 +96,7 @@
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png">
 <meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-12-10T15:19:34.231Z">
+<meta property="article:modified_time" content="2020-12-11T02:45:43.311Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Redis">
 <meta name="twitter:card" content="summary">
@@ -546,18 +546,12 @@
 <p>Sentinel 每 1 秒发送一次 PING 指令，持续回复无效命令超过一个固定的时间，Sentinel 判断主服务器已经下线（主观下线）。随后 Sentinel 会询问其他的 Sentinel 该服务器是否下线，如果足够多的 Sentinel 判断服务器已经处于主观下线状态，该服务器进入客观下线状态。</p>
 <p>当一个主服务器处于客观下线状态后，监视该主服务器的 Sentinel 需要选举出一个领头 Sentinel，执行故障转移操作。选举流程采用 Raft 算法的一个实现，具体流程如下：</p>
 <ul>
-<li><p>所有的 Sentinel 都有被选举为领头 Sentinel 的资格。</p>
-</li>
-<li><p>每个发现自己监听的主服务器处于客观下线状态的 Sentinel 都会要求其他的 Sentinel 设置自己为局部领头 Sentinel。</p>
-</li>
-<li><p>最先向目标 Sentinel 发送设置要求的源 Sentinel 会被设置为目标 Sentinel 的局部领头 Sentinel，其他的设置要求都会被忽略。（即先到先得）</p>
-</li>
-<li><p>如果某个 Sentinel 被半数以上的 Sentinel 选举为局部领头 Sentinel，这个 Sentinel 将成为领头 Sentinel。</p>
-</li>
-<li><p>如果在规定时间内没有选出领头 Sentinel，那么过一段时间后再次进行选举，直到选出领头 Sentinel 为止。</p>
-</li>
-<li><p>领头 Sentinel 负责故障转移操作，包括确定新的主服务器、修改从服务器的复制目标、将下线的主服务器设置为新主服务器的从服务器。</p>
-</li>
+<li>所有的 Sentinel 都有被选举为领头 Sentinel 的资格。</li>
+<li>每个发现自己监听的主服务器处于客观下线状态的 Sentinel 都会要求其他的 Sentinel 设置自己为局部领头 Sentinel。</li>
+<li>最先向目标 Sentinel 发送设置要求的源 Sentinel 会被设置为目标 Sentinel 的局部领头 Sentinel，其他的设置要求都会被忽略。（即先到先得）</li>
+<li>如果某个 Sentinel 被半数以上的 Sentinel 选举为局部领头 Sentinel，这个 Sentinel 将成为领头 Sentinel。</li>
+<li>如果在规定时间内没有选出领头 Sentinel，那么过一段时间后再次进行选举，直到选出领头 Sentinel 为止。</li>
+<li>领头 Sentinel 负责故障转移操作，包括确定新的主服务器、修改从服务器的复制目标、将下线的主服务器设置为新主服务器的从服务器。</li>
 </ul>
 <p>选举新主服务器步骤如下：</p>
 <ul>
@@ -593,7 +587,7 @@
 <li>主节点会把接收到的第一个从节点设置为新的主节点。</li>
 <li>如果一个从节点获得 n/2+1 个主节点的投票支持，那么就会成为新的主节点。</li>
 </ul>
-<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>[1]《Redis 设计与实现》</p>
+<h2 id="参考资料"><a href="# 参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>[1]《Redis 设计与实现》</p>
 <p>[2] <a href="https://zhuanlan.zhihu.com/p/41228196" target="_blank" rel="noopener">P2P 网络核心技术：Gossip 协议</a></p>
 
       
@@ -732,7 +726,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">5</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -787,7 +781,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字典"><span class="nav-number">1.1.</span> <span class="nav-text"> 字典 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.2.</span> <span class="nav-text">跳跃表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整数集合"><span class="nav-number">1.3.</span> <span class="nav-text">整数集合 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩链表"><span class="nav-number">1.4.</span> <span class="nav-text">压缩链表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象"><span class="nav-number">1.5.</span> <span class="nav-text">对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单机数据库"><span class="nav-number">2.</span> <span class="nav-text">单机数据库 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#键过期删除策略"><span class="nav-number">2.1.</span> <span class="nav-text"> 键过期删除策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB- 持久化"><span class="nav-number">2.2.</span> <span class="nav-text">RDB 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF- 持久化"><span class="nav-number">2.3.</span> <span class="nav-text">AOF 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件"><span class="nav-number">2.4.</span> <span class="nav-text">事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端"><span class="nav-number">2.5.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器"><span class="nav-number">2.6.</span> <span class="nav-text">服务器 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多机数据库"><span class="nav-number">3.</span> <span class="nav-text">多机数据库 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制"><span class="nav-number">3.1.</span> <span class="nav-text"> 复制 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sentinel（哨兵机制）"><span class="nav-number">3.2.</span> <span class="nav-text">Sentinel（哨兵机制）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群"><span class="nav-number">3.3.</span> <span class="nav-text">集群 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#References"><span class="nav-number">4.</span> <span class="nav-text">References</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据结构"><span class="nav-number">1.</span> <span class="nav-text">数据结构 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字典"><span class="nav-number">1.1.</span> <span class="nav-text"> 字典 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#跳跃表"><span class="nav-number">1.2.</span> <span class="nav-text">跳跃表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整数集合"><span class="nav-number">1.3.</span> <span class="nav-text">整数集合 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩链表"><span class="nav-number">1.4.</span> <span class="nav-text">压缩链表 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象"><span class="nav-number">1.5.</span> <span class="nav-text">对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单机数据库"><span class="nav-number">2.</span> <span class="nav-text">单机数据库 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#键过期删除策略"><span class="nav-number">2.1.</span> <span class="nav-text"> 键过期删除策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB- 持久化"><span class="nav-number">2.2.</span> <span class="nav-text">RDB 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AOF- 持久化"><span class="nav-number">2.3.</span> <span class="nav-text">AOF 持久化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件"><span class="nav-number">2.4.</span> <span class="nav-text">事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端"><span class="nav-number">2.5.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务器"><span class="nav-number">2.6.</span> <span class="nav-text">服务器 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多机数据库"><span class="nav-number">3.</span> <span class="nav-text">多机数据库 </span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制"><span class="nav-number">3.1.</span> <span class="nav-text"> 复制 </span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sentinel（哨兵机制）"><span class="nav-number">3.2.</span> <span class="nav-text">Sentinel（哨兵机制）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群"><span class="nav-number">3.3.</span> <span class="nav-text">集群 </span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
             
 
           </div>
@@ -821,7 +815,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">8.6k</span>
+    <span title="Site words total count">11k</span>
   
 </div>
 
