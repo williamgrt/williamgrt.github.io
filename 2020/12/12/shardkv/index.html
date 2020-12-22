@@ -87,7 +87,7 @@
 <meta property="og:description" content="设计要求基于之前实现的 Raft 协议（包含 snapshot 机制），实现一个可以容错的分区 Key&#x2F;Value 数据库。有以下几个具体的要求：  每个 Replica Group 负责存储一部分 K&#x2F;V 数据，通过 Raft 实现一致性。 Shard Master 负责管理配置信息，决定如何分片，通过 Raft 实现一致性。 客户端通过 Shard Master 得知所有的分片信息，Repli">
 <meta property="og:image" content="https://williamgrt.github.io/2020/12/12/shardkv/Architecture.png">
 <meta property="article:published_time" content="2020-12-12T13:29:28.000Z">
-<meta property="article:modified_time" content="2020-12-18T09:20:33.176Z">
+<meta property="article:modified_time" content="2020-12-19T12:06:54.473Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Raft">
 <meta name="twitter:card" content="summary">
@@ -425,7 +425,7 @@
 <p>服务端如何才能判断客户端的请求达成共识？</p>
 <p>我们可以根据 Raft 协议的安全性实现。Raft 需要满足 State Machine Safety，定义如下：</p>
 <blockquote>
-<p>State Machine Safety: if a server has applied a log entry<br>at a given index to its state machine, no other server<br>will ever apply a different log entry for the same index.</p>
+<p>State Machine Safety: if a server has applied a log entry at a given index to its state machine, no other server will ever apply a different log entry for the same index.</p>
 </blockquote>
 <p>这个特性说明如果在某个 index 上的消息达成了共识，那么这个 index 上的消息就不会改变。</p>
 <p>因此，Client 在写入 Command 并获得写入的 index 后，创建对应 index 的 channel 并监听，如果 channel 返回的命令和发送的命令相等，表示命令执行成功。</p>
@@ -542,6 +542,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2020/12/23/redis-ev/" rel="prev" title="Redis 源码阅读：启动与事件循环">
+                Redis 源码阅读：启动与事件循环 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -617,7 +621,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -706,7 +710,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">11k</span>
+    <span title="Site words total count">12.3k</span>
   
 </div>
 
