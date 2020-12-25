@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="I/O multiplexing," />
+  <meta name="keywords" content="Linux,epoll," />
 
 
 
@@ -86,9 +86,10 @@
 <meta property="og:site_name" content="williamgrt&#39;s Blog">
 <meta property="og:description" content="为什么需要I&#x2F;O多路复用大部分应用都可以使用阻塞I&#x2F;O模型就足够完成任务了。但是，有些应用需要满足以下的条件：  使用非阻塞的方式检查文件描述符是否可以执行I&#x2F;O操作。 可以同时检查多个文件描述符。  我们可以使用非阻塞I&#x2F;O或者多进程多线程的方式满足以上需求，但是又会带来新的问题：  如果文件描述符很多，非阻塞I&#x2F;O需要不停轮询每个文件描述符，造成CPU的浪费。 如果每个文件描述符都创建一个新进">
 <meta property="article:published_time" content="2020-06-26T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-12-13T02:57:02.124Z">
+<meta property="article:modified_time" content="2020-12-25T14:51:13.943Z">
 <meta property="article:author" content="williamgrt">
-<meta property="article:tag" content="I&#x2F;O multiplexing">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="epoll">
 <meta name="twitter:card" content="summary">
 
 
@@ -314,8 +315,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network-Programing/" itemprop="url" rel="index">
-                    <span itemprop="name">Network Programing</span>
+                  <a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index">
+                    <span itemprop="name">网络编程</span>
                   </a>
                 </span>
 
@@ -499,7 +500,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/I-O-multiplexing/" rel="tag"># I/O multiplexing</a>
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/epoll/" rel="tag"># epoll</a>
           
         </div>
       
@@ -608,7 +611,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">5</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -619,7 +622,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
