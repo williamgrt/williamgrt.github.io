@@ -86,7 +86,7 @@
 <meta property="og:site_name" content="williamgrt&#39;s Blog">
 <meta property="og:description" content="本文梳理了 Redis 启动服务器的流程，并且简要介绍了 Redis 事件处理机制的原理以及对应的源码实现。 Redis 作为一个高性能的缓存，必须要有一个高性能的事件处理机制支撑其性能。同时，Redis 的事件处理机制不考虑扩展性（不用于 Redis 以外的应用），保证了实现的简洁性，阅读和分析的难度不大。 本文的 Redis 版本是 redis-6.0.9，源码主要在 server.c 和 a">
 <meta property="article:published_time" content="2020-12-22T16:12:52.000Z">
-<meta property="article:modified_time" content="2020-12-25T14:49:29.805Z">
+<meta property="article:modified_time" content="2020-12-26T02:55:56.509Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Redis">
 <meta property="article:tag" content="源码">
@@ -392,15 +392,13 @@
 <ol>
 <li>使用默认参数初始化。</li>
 <li>解析命令行参数。</li>
-<li>初始化服务器。具体执行了以下的操作：</li>
-</ol>
-<ul>
+<li>初始化服务器。具体执行了以下的操作：<ul>
 <li>设置信号处理函数。</li>
 <li>初始化事件循环结构体 EventLoop。</li>
 <li>把监听套接字作为事件注册到事件循环结构体中。</li>
 <li>初始化数据库。</li>
 </ul>
-<ol start="4">
+</li>
 <li>启动服务器的事件循环，开始处理外部的指令。</li>
 </ol>
 <h2 id="服务器的事件循环"><a href="# 服务器的事件循环" class="headerlink" title="服务器的事件循环"></a>服务器的事件循环</h2><h3 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a>EventLoop</h3><p>Redis 把所有的事件注册到一个 <code>aeEventLoop</code> 结构体中，该结构体负责监听是否有事件到来。</p>
@@ -574,7 +572,7 @@
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <p class="site-author-name" itemprop="name">williamgrt</p>
-              <p class="site-description motion-element" itemprop="description">Too young too simple, sometimes naive</p>
+              <p class="site-description motion-element" itemprop="description">Simple and Naive</p>
           </div>
 
           <nav class="site-state motion-element">
@@ -595,7 +593,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>

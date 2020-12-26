@@ -96,7 +96,7 @@
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png">
 <meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-12-25T14:49:53.215Z">
+<meta property="article:modified_time" content="2020-12-26T02:55:34.805Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Redis">
 <meta property="article:tag" content="读书笔记">
@@ -522,7 +522,13 @@
 <h3 id="服务器"><a href="# 服务器" class="headerlink" title="服务器"></a>服务器 </h3><p> 服务器接收到客户端发送的命令后，执行以下几个步骤：</p>
 <ul>
 <li>读取命令请求，缓存在客户端结构体中；</li>
-<li>执行命令，包含了以下四步：（1）查找命令实现；（2）执行预备工作；（3）调用命令的执行函数；（4）执行后续工作。</li>
+<li>执行命令，包含了以下四步：<ul>
+<li>查找命令实现</li>
+<li>执行预备工作</li>
+<li>调用命令的执行函数</li>
+<li>执行后续工作。</li>
+</ul>
+</li>
 <li>将命令回复发送给客户端。</li>
 </ul>
 <p>服务器每 100 毫秒执行一次 <code>serverCron</code> 函数。该函数主要的工作包括：更新服务器缓存、更新 LRU 时钟、检查持久化条件、执行被延迟的 BGREWRITEAOF 操作。</p>
@@ -720,7 +726,7 @@
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <p class="site-author-name" itemprop="name">williamgrt</p>
-              <p class="site-description motion-element" itemprop="description">Too young too simple, sometimes naive</p>
+              <p class="site-description motion-element" itemprop="description">Simple and Naive</p>
           </div>
 
           <nav class="site-state motion-element">
@@ -741,7 +747,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
