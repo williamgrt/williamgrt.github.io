@@ -96,7 +96,7 @@
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-779a4cae9206c3fe3d2d97d7ea31cabd978db1b9.png">
 <meta property="og:image" content="https://williamgrt.github.io/2020/09/09/redis-notes/graphviz-a72dac22233e8c010883fb0fc3c581cf7f674ed7.png">
 <meta property="article:published_time" content="2020-09-09T15:30:11.000Z">
-<meta property="article:modified_time" content="2020-12-26T07:40:08.629Z">
+<meta property="article:modified_time" content="2020-12-28T13:04:15.288Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Redis">
 <meta property="article:tag" content="读书笔记">
@@ -357,7 +357,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  5k
+                  5.2k
                 </span>
               
 
@@ -373,7 +373,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  17
+                  18
                 </span>
               
             </div>
@@ -408,8 +408,8 @@
 <p>由于一次性对大量的键值对（千万级或者亿级）执行 rehash 操作会阻塞当前服务器线程，无法继续执行命令，Redis 采用了渐进式 rehash 方法完成 rehash 操作。具体步骤如下：</p>
 <ul>
 <li>为 <code>ht[1]</code> 分配空间，让字典同时拥有 <code>ht[0]</code> 和 <code>ht[1]</code>。</li>
-<li>初始化索引计数器 rehashidx 为 0，表示 rehash 正式开始。</li>
-<li>每当执行查找、插入、删除操作时，顺带对 <code>ht[0][rehashidx]</code> 的所有元素执行 rehash 操作到 <code>ht[1]</code> 中，完成后，rehashidx++。</li>
+<li>初始化索引计数器 <code>rehashidx</code> 为 0，表示 rehash 正式开始。</li>
+<li>每当执行查找、插入、删除操作时，顺带对 <code>ht[0][rehashidx]</code> 的所有元素执行 rehash 操作到 <code>ht[1]</code> 中，完成后，<code>rehashidx++</code>。</li>
 <li>当所有的键值对迁移完毕后，回收 <code>ht[0]</code> 的内存空间，把 <code>ht[1]</code> 变为 <code>ht[0]</code>，同时新建一个 <code>ht[1]</code> 用于下一次的 rehash 过程。</li>
 </ul>
 <p>在执行 rehash 的过程中，对字典的删除、查找、更新操作会同时在两个哈希表上进行。例如，要在字典中查找一个键，程序首先在 <code>ht[0]</code> 中查找，如果没找到则在 <code>ht[1]</code> 中查找。对字典的插入操作直接在 <code>ht[1]</code> 上执行。</p>
@@ -421,8 +421,16 @@
 <li>分值：每个节点按照分值由小到大排序。如果分值相同，按照对象大小排序。</li>
 <li>成员：一个字符串对象。</li>
 </ul>
+<p>为了便于处理整个跳跃表，Redis 使用 <code>zskiplist</code> 管理整个跳跃表，这个结构包含了指向头尾节点的指针 <code>head</code> 和 <code>tail</code>，通过这两个指针，程序访问头尾节点的时间复杂度是 O(1)。通过 <code>length</code> 保存整个跳跃表的长度，获取长度的时间复杂度是 O(1)。同理，通过 <code>level</code> 保存跳跃表的最大层级。</p>
 <h3 id="整数集合"><a href="# 整数集合" class="headerlink" title="整数集合"></a>整数集合 </h3><p> 当 SET 内容不多，并且都是整数时，Redis 使用整数集合作为底层实现。</p>
-<p>整数集合的元素类型包括 <code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。整数集合不支持降级操作。</p>
+<p>整数集合的元素类型包括 <code>int16_t, int32_t, int64_t</code>。所有的数据按照顺序由小到大排列。当新插入的元素的长度超过了整数集合中所有元素的长度，那么需要对整数集合执行升级操作。这种做法保证了灵活性，同时节约了内存。</p>
+<p>整数集合的升级包括了以下的步骤：</p>
+<ul>
+<li>根据新元素的类型，分配合适的底层数组空间大小。</li>
+<li>将原有的元素转换为和新元素相同的类型，并将类型转换后的数放置在正确的位置上，保证相对顺序不变。</li>
+<li>将新元素放到指定的位置。</li>
+</ul>
+<p>整数集合不支持降级操作。</p>
 <h3 id="压缩链表"><a href="# 压缩链表" class="headerlink" title="压缩链表"></a>压缩链表 </h3><p> 压缩列表是哈希键和集合键的底层实现之一，当数据量不大，并且列表键的列表项或者哈希键的键值是整型或者短字符串，就会使用压缩链表作为底层实现。</p>
 <p>压缩链表的节点有以下几个字段构成：previous_entry_length、encoding、content。</p>
 <ul>
@@ -478,7 +486,7 @@
 
 <h3 id="AOF- 持久化"><a href="#AOF- 持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h3><p>AOF 持久化通过保存 Redis 服务器的写命令实现保存数据库的状态。</p>
 <p>为防止 AOF 文件过大，服务器定期执行 AOF 重写操作，使用更少的指令达到相同的数据库状态，减少冗余。</p>
-<p>可以通过设置 appendfsync 选项的值控制 AOF 文件的刷新行为。</p>
+<p>可以通过设置 <code>appendfsync</code> 选项的值控制 AOF 文件的刷新行为。</p>
 <table>
 <thead>
 <tr>
@@ -499,7 +507,7 @@
 <td align="center">将 aof_buf 缓冲区的所有内容写入，不对 AOF 文件同步，具体的同步时间由操作系统决定。</td>
 </tr>
 </tbody></table>
-<p>appendfsync 选项的值直接决定了 AOF 持久化功能的效率和安全性。</p>
+<p><code>appendfsync</code> 选项的值直接决定了 AOF 持久化功能的效率和安全性。</p>
 <p>在重写的过程中，服务器可能会接收到新的写命令，造成 AOF 文件状态与当前数据库状态的不一致。为了解决这个问题，Redis 设置了一个 AOF 缓冲区。在 AOF 重写过程中，服务器将接收到的写命令保存到缓冲区中。当子进程的 AOF 重写操作完成后，把缓冲区的内容写入到新的 AOF 文件中。</p>
 <h3 id="事件"><a href="# 事件" class="headerlink" title="事件"></a>事件</h3><p>Redis 是一个事件驱动程序，事件类型分为文件事件和时间事件。</p>
 <p>文件事件处理器基于 Reactor 模式开发，通过包装 I/O 多路复用函数实现。有两种类型的事件：</p>
@@ -596,10 +604,8 @@
 <li>如果一个从节点获得 n/2+1 个主节点的投票支持，那么就会成为新的主节点。</li>
 </ul>
 <h2 id="参考"><a href="# 参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><p>《Redis 设计与实现》</p>
-</li>
-<li><p><a href="https://zhuanlan.zhihu.com/p/41228196" target="_blank" rel="noopener">P2P 网络核心技术：Gossip 协议</a></p>
-</li>
+<li>《Redis 设计与实现》</li>
+<li><a href="https://zhuanlan.zhihu.com/p/41228196" target="_blank" rel="noopener">P2P 网络核心技术：Gossip 协议</a></li>
 </ul>
 
       
@@ -829,7 +835,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">12.3k</span>
+    <span title="Site words total count">12.5k</span>
   
 </div>
 
