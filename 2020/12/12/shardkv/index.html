@@ -81,13 +81,13 @@
 
 <meta name="description" content="设计要求基于之前实现的 Raft 协议（包含 snapshot 机制），实现一个可以容错的分区 Key&#x2F;Value 数据库。有以下几个具体的要求：  每个 Replica Group 负责存储一部分 K&#x2F;V 数据，通过 Raft 实现一致性。 Shard Master 负责管理配置信息，决定如何分片，通过 Raft 实现一致性。 客户端通过 Shard Master 得知所有的分片信息，Repli">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Sharded Key&#x2F;Value Service Implementation">
+<meta property="og:title" content="MIT 6.824 Lab 4 -- Sharded Key&#x2F;Value Service">
 <meta property="og:url" content="https://williamgrt.github.io/2020/12/12/shardkv/index.html">
 <meta property="og:site_name" content="williamgrt&#39;s Blog">
 <meta property="og:description" content="设计要求基于之前实现的 Raft 协议（包含 snapshot 机制），实现一个可以容错的分区 Key&#x2F;Value 数据库。有以下几个具体的要求：  每个 Replica Group 负责存储一部分 K&#x2F;V 数据，通过 Raft 实现一致性。 Shard Master 负责管理配置信息，决定如何分片，通过 Raft 实现一致性。 客户端通过 Shard Master 得知所有的分片信息，Repli">
 <meta property="og:image" content="https://williamgrt.github.io/2020/12/12/shardkv/Architecture.png">
 <meta property="article:published_time" content="2020-12-12T13:29:28.000Z">
-<meta property="article:modified_time" content="2020-12-26T07:43:45.070Z">
+<meta property="article:modified_time" content="2021-01-01T16:02:44.273Z">
 <meta property="article:author" content="williamgrt">
 <meta property="article:tag" content="Raft">
 <meta property="article:tag" content="系统设计">
@@ -128,7 +128,7 @@
 
 
 
-  <title>Sharded Key/Value Service Implementation | williamgrt's Blog</title>
+  <title>MIT 6.824 Lab 4 -- Sharded Key/Value Service | williamgrt's Blog</title>
   
 
 
@@ -282,7 +282,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Sharded Key/Value Service Implementation</h1>
+          <h1 class="post-title" itemprop="name headline">MIT 6.824 Lab 4 -- Sharded Key/Value Service</h1>
         
 
         <div class="post-meta">
@@ -505,7 +505,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="https://williamgrt.github.io/2020/12/12/shardkv/" title="Sharded Key/Value Service Implementation">https://williamgrt.github.io/2020/12/12/shardkv/</a>
+    <a href="https://williamgrt.github.io/2020/12/12/shardkv/" title="MIT 6.824 Lab 4 -- Sharded Key/Value Service">https://williamgrt.github.io/2020/12/12/shardkv/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -535,8 +535,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/11/28/raft/" rel="next" title="Raft 协议的实现">
-                <i class="fa fa-chevron-left"></i> Raft 协议的实现
+              <a href="/2020/11/28/raft/" rel="next" title="MIT 6.824 Lab 2 Raft">
+                <i class="fa fa-chevron-left"></i> MIT 6.824 Lab 2 Raft
               </a>
             
           </div>
@@ -699,7 +699,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
